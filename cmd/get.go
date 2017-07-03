@@ -74,16 +74,15 @@ func imageNameForManifest(imageName string) string {
 	return imageName + ":_manifest"
 }
 
-func repoAndTagNames(name string) (repoName string, tagName string, imageName string) {
+func repoAndTaggedNames(name string) (repoName string, imageName string) {
 	nameSlice := strings.Split(name, ":")
 	repoName = nameSlice[0]
-	if len(nameSlice) < 2 {
-		tagName = "latest"
-	} else {
+	tagName := "latest"
+	if len(nameSlice) > 1 {
 		tagName = nameSlice[1]
 	}
 	imageName = repoName + ":" + tagName
-	return repoName, tagName, imageName
+	return repoName, imageName
 }
 
 // getCmd gets manifesto data
@@ -100,12 +99,12 @@ var getCmd = &cobra.Command{
 		name := args[0]
 		metadata := args[1]
 
-		repoName, _, imageName := repoAndTagNames(name)
+		repoName, imageName := repoAndTaggedNames(name)
 		metadataImageName := imageNameForManifest(repoName)
 
 		raw, err := dockerGetData(metadataImageName)
 		if err != nil {
-			fmt.Printf("Couldn't get manifest: %v\n", err)
+			fmt.Printf("No manifesto data stored for image '%s'\n", imageName)
 			os.Exit(1)
 		}
 		var mml MetadataManifestList
@@ -122,7 +121,7 @@ var getCmd = &cobra.Command{
 					if m.Type == metadata {
 						// fmt.Printf("%v\n", m.Digest)
 						// TODO!! These should go directly into blobs rather than into their own image
-						contents, err := dockerGetData("lizrice/blob@" + m.Digest)
+						contents, err := dockerGetData(repoName + "@" + m.Digest)
 						if err != nil {
 							fmt.Printf("Couldn't find %s data from manifest: %v\n", metadata, err)
 							os.Exit(1)

@@ -17,6 +17,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -32,26 +33,61 @@ type Stream struct {
 // imageName is the name we'll store this data under, including the tag e.g. myorg/myrepo:mytag or myorg/myrepo@sha256:12345...
 // datafile is the name of the file we get the data from
 func dockerPutData(imageName string, metadataName string, datafile string) string {
-	dockerfileName := "Dockerfile." + metadataName
-	dockerfile := fmt.Sprintf("FROM scratch \nADD %s /data\n", datafile)
-	err := ioutil.WriteFile(dockerfileName, []byte(dockerfile), 0644)
+	// Copy file locally so that it's going to be in the build context
+	metadata, err := os.Open(datafile)
+	if err != nil {
+		fmt.Printf("Couldn't open file %s: %v\n", datafile, err)
+		os.Exit(1)
+	}
+
+	defer metadata.Close()
+	tf, err := ioutil.TempFile(".", "metadata")
+	if err != nil {
+		fmt.Printf("Error creating temporary file: %v\n", err)
+		os.Exit(1)
+	}
+
+	_, err = io.Copy(tf, metadata)
+	if err != nil {
+		fmt.Printf("Error copying to temporary file: %v\n", err)
+		os.Exit(1)
+	}
+
+	if err = tf.Close(); err != nil {
+		fmt.Printf("Error closing temporary file: %v\n", err)
+		os.Remove(tf.Name())
+		os.Exit(1)
+	}
+
+	df, err := ioutil.TempFile(".", "Dockerfile")
+	dockerfile := fmt.Sprintf("FROM scratch \nADD %s /data\n", tf.Name())
+	_, err = df.Write([]byte(dockerfile))
 	if err != nil {
 		fmt.Printf("could not create Dockerfile: %v\n", err)
 		os.Exit(1)
 	}
 
-	ex := exec.Command("docker", "build", "-f", "Dockerfile."+metadataName, "-t", imageName, ".")
+	ex := exec.Command("docker", "build", "-f", df.Name(), "-t", imageName, ".")
+	// ex.Stderr = os.Stderr
+	// ex.Stdout = os.Stdout
 	ex.Run()
-	fmt.Printf("Wrote Dockerfile.%s for %s \n", metadataName, imageName)
 
-	// Delete the Dockerfile
-	err = os.Remove(dockerfileName)
+	// Delete the Dockerfile and the temporary file
+	err = os.Remove(df.Name())
 	if err != nil {
 		fmt.Printf("Couldn't delete Dockerfile: %v\n", err)
 		os.Exit(1)
 	}
 
+	err = os.Remove(tf.Name())
+	if err != nil {
+		fmt.Printf("Couldn't delete temp file: %v\n", err)
+		os.Exit(1)
+	}
+
 	ex = exec.Command("docker", "push", imageName)
+	// ex.Stderr = os.Stderr
+	// ex.Stdout = os.Stdout
 	ex.Run()
 	ex = exec.Command("docker", "inspect", imageName, "-f", "{{.RepoDigests}}")
 	digestOut, err := ex.Output()
@@ -67,7 +103,6 @@ func dockerPutData(imageName string, metadataName string, datafile string) strin
 
 	digest := strings.TrimSpace(hh[1])
 	digest = strings.TrimRight(digest, "]")
-	fmt.Printf("Digest for %s is %v\n", metadataName, digest)
 	return digest
 }
 
@@ -86,20 +121,23 @@ var putCmd = &cobra.Command{
 		metadataName := args[1]
 		datafile := args[2]
 
-		repoName, _, imageName := repoAndTagNames(name)
+		repoName, imageName := repoAndTaggedNames(name)
 		metadataImageName := imageNameForManifest(repoName)
 
 		// Store the piece of metadata we've been given
+		// TODO!! Should check that the image exists before adding metadata for it
 		// TODO!! These should go directly into blobs rather than into their own image
-		digest := dockerPutData("lizrice/blob:"+metadataName, metadataName, datafile)
+		fmt.Printf("Storing metadata '%s' for '%s'\n", metadataName, imageName)
+		digest := dockerPutData(repoName+":_manifest_"+metadataName, metadataName, datafile)
+		fmt.Printf("Metadata '%s' for '%s' stored at %s\n", metadataName, imageName, digest)
 
 		// Read the current manifesto if it exists
 		var mml MetadataManifestList
 		raw, err := dockerGetData(metadataImageName)
 		if err != nil {
-			fmt.Printf("No existing manifesto for %s\n", metadataImageName)
+			fmt.Printf("Creating new manifesto for %s\n", repoName)
 		} else {
-			fmt.Printf("Existing manifesto for %s: %v\n", metadataImageName, mml)
+			fmt.Printf("Updating manifesto for %s\n", repoName)
 			json.Unmarshal(raw, &mml)
 		}
 
@@ -109,11 +147,10 @@ var putCmd = &cobra.Command{
 			// TODO!! This should be checking for images by SHA not by tag as these can move
 			if v.Tag == imageName {
 				found = true
-				fmt.Printf("Found metadata for %v\n", imageName)
 				for kk, m := range v.MetadataManifest {
 					if m.Type == metadataName {
 						// Replace this with the new blob
-						fmt.Printf("Updating %s metadata\n", metadataName)
+						fmt.Printf("Updating '%s' metadata in manifesto for '%s'\n", metadataName, imageName)
 						mml.Tags[k].MetadataManifest[kk].Digest = digest
 						replaced = true
 					}
@@ -121,7 +158,7 @@ var putCmd = &cobra.Command{
 
 				// A new piece of metadata for this image
 				if !replaced {
-					fmt.Printf("Adding %s metadata\n", metadataName)
+					fmt.Printf("Adding '%s' metadata to manifesto for '%s'\n", metadataName, imageName)
 					newTag := MetadataManifest{
 						Type:   metadataName,
 						Digest: digest,
@@ -129,12 +166,11 @@ var putCmd = &cobra.Command{
 					mml.Tags[k].MetadataManifest = append(mml.Tags[k].MetadataManifest, newTag)
 				}
 			}
-
 		}
 
 		// Metadata for a new image
 		if !found {
-			fmt.Printf("Adding first metadata for image %s\n", imageName)
+			fmt.Printf("Adding '%s' metadata to new manifesto for '%s'\n", metadataName, imageName)
 			newMMT := MetadataManifestTag{
 				Tag: imageName,
 				MetadataManifest: []MetadataManifest{
@@ -145,10 +181,10 @@ var putCmd = &cobra.Command{
 				},
 			}
 			mml.Tags = append(mml.Tags, newMMT)
-			fmt.Printf("%#v\n", newMMT)
+			// fmt.Printf("%#v\n", newMMT)
 		}
 
-		fmt.Printf("Updated manifesto: %v\n", mml)
+		// fmt.Printf("Updated manifesto: %v\n", mml)
 
 		// Write the manifesto file
 		data, err := json.Marshal(mml)

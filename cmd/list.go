@@ -34,12 +34,12 @@ var listCmd = &cobra.Command{
 		}
 
 		name := args[0]
-		repoName, _, imageName := repoAndTagNames(name)
+		repoName, imageName := repoAndTaggedNames(name)
 		metadataImageName := imageNameForManifest(repoName)
 
 		raw, err := dockerGetData(metadataImageName)
 		if err != nil {
-			fmt.Printf("Couldn't get manifest: %v\n", err)
+			fmt.Printf("No manifesto data stored for image '%s'\n", imageName)
 			os.Exit(1)
 		}
 		var mml MetadataManifestList
@@ -51,7 +51,7 @@ var listCmd = &cobra.Command{
 			// can be moved we should really be finding the SHA for the tag and using that as the key in
 			// the manifesto data.
 			if v.Tag == imageName {
-				fmt.Printf("Metadata for %v:\n", imageName)
+				fmt.Printf("Metadata types stored for image '%s':\n", imageName)
 				found = true
 				for _, m := range v.MetadataManifest {
 					fmt.Printf("    %s\n", m.Type)
