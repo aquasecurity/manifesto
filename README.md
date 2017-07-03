@@ -13,8 +13,8 @@ At the moment this is a Proof of Concept - feedback and ideas very welcome.
 
 ## Installation
 
-Clone this repo (or go get aquasecurity/manifesto)
-Go to the directory and `go build .`
+* Clone this repo (or go get aquasecurity/manifesto)
+* Go to the directory and `go build .`
 
 ## Usage
 
