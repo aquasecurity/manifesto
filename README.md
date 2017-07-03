@@ -9,6 +9,8 @@ Examples of the kind of information you might want to store post-build include:
 
 The intention is that each piece of metadata could be signed using Notary.
 
+At the moment this is a Proof of Concept - feedback and ideas very welcome. 
+
 ## Installation
 
 Clone this repo (or go get aquasecurity/manifesto)
@@ -53,7 +55,7 @@ $ ./manifesto get lizrice/imagetest something
 }
 ```
 
-# Proof of concept 
+# Proof of concept status
 
 In this proof of concept:  
 
@@ -66,3 +68,4 @@ In this proof of concept:
 * The manifest file should refer to images by SHA rather than by tag (as the tag can move around). Storing metadata against a particular tag should store it against the SHA currently referred to by that tag. 
 * Metadata is currently pushed to a new image tagged (for example) `myorg/myimage:_manifest_<metadata type>`. It would be better to push it directly to a blob. 
 * Add data signing capabilities. 
+* Code currently execs out to the docker client executable - would be better to use the go client and call the API directly. 
