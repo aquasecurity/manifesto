@@ -11,6 +11,10 @@ Although we haven't yet implemented it, the intention is that each piece of meta
 
 At the moment this is a Proof of Concept - feedback and ideas very welcome. 
 
+## Demo 
+
+[![asciicast](https://asciinema.org/a/4PJUTsNJa6sDvT3DSc0fJhSTW.png)](https://asciinema.org/a/4PJUTsNJa6sDvT3DSc0fJhSTW)
+
 ## Installation
 
 * Clone this repo (or go get aquasecurity/manifesto)
