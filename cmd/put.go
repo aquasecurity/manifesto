@@ -21,7 +21,6 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -89,20 +88,13 @@ func dockerPutData(imageName string, metadataName string, datafile string) strin
 	// ex.Stderr = os.Stderr
 	// ex.Stdout = os.Stdout
 	ex.Run()
-	ex = exec.Command("docker", "inspect", imageName, "-f", "{{.RepoDigests}}")
-	digestOut, err := ex.Output()
+
+	digest, err := dockerGetDigest(imageName)
 	if err != nil {
-		fmt.Printf("Error reading inspect output: %v\n", err)
-		os.Exit(1)
-	}
-	hh := strings.Split(string(digestOut), "@")
-	if len(hh) < 2 {
-		fmt.Printf("Digest not found in %s\n", digestOut)
+		fmt.Printf("Couldn't get digest: %v", err)
 		os.Exit(1)
 	}
 
-	digest := strings.TrimSpace(hh[1])
-	digest = strings.TrimRight(digest, "]")
 	return digest
 }
 

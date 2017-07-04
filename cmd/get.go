@@ -70,6 +70,23 @@ func dockerGetData(imageName string) ([]byte, error) {
 	return raw, err
 }
 
+func dockerGetDigest(imageName string) (digest string, err error) {
+	ex := exec.Command("docker", "inspect", imageName, "-f", "{{.RepoDigests}}")
+	digestOut, err := ex.Output()
+	if err != nil {
+		return "", fmt.Errorf("Error reading inspect output: %v\n", err)
+	}
+
+	hh := strings.Split(string(digestOut), "@")
+	if len(hh) < 2 {
+		return "", fmt.Errorf("Digest not found in %s\n", digestOut)
+	}
+
+	digest = strings.TrimSpace(hh[1])
+	digest = strings.TrimRight(digest, "]")
+	return digest, nil
+}
+
 func imageNameForManifest(imageName string) string {
 	return imageName + ":_manifest"
 }
@@ -102,6 +119,20 @@ var getCmd = &cobra.Command{
 		repoName, imageName := repoAndTaggedNames(name)
 		metadataImageName := imageNameForManifest(repoName)
 
+		// Make sure we have an up-to-date version of this image
+		ex := exec.Command("docker", "pull", imageName)
+		ex.Run()
+
+		// Get its SHA
+		imageDigest, err := dockerGetDigest(imageName)
+		if err != nil {
+			fmt.Printf("Image '%s' not found\n", imageName)
+			os.Exit(1)
+		}
+
+		fmt.Printf("Image %s has digest %s\n", imageName, imageDigest)
+
+		// Get the metadata manifest for this image
 		raw, err := dockerGetData(metadataImageName)
 		if err != nil {
 			fmt.Printf("No manifesto data stored for image '%s'\n", imageName)
