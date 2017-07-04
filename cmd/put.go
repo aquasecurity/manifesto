@@ -123,7 +123,7 @@ var putCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		fmt.Printf("Image %s has digest %s\n", imageName, imageDigest)
+		// fmt.Printf("Image %s has digest %s\n", imageName, imageDigest)
 
 		// Store the piece of metadata we've been given
 		// TODO!! These should go directly into blobs rather than into their own image
@@ -137,7 +137,6 @@ var putCmd = &cobra.Command{
 		if err != nil {
 			fmt.Printf("Creating new manifesto for %s\n", repoName)
 		} else {
-			fmt.Printf("Updating manifesto for %s\n", repoName)
 			json.Unmarshal(raw, &mml)
 		}
 
@@ -169,7 +168,7 @@ var putCmd = &cobra.Command{
 
 		// Metadata for a new image
 		if !found {
-			fmt.Printf("Adding '%s' metadata to new manifesto for '%s'\n", metadataName, imageName)
+			fmt.Printf("Adding '%s' metadata to manifesto for '%s'\n", metadataName, imageName)
 			newImm := ImageMetadataManifesto{
 				ImageDigest: imageDigest,
 				MetadataManifesto: []MetadataManifesto{

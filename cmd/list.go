@@ -44,7 +44,7 @@ var listCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		fmt.Printf("Image %s has digest %s\n", imageName, imageDigest)
+		// fmt.Printf("Image %s has digest %s\n", imageName, imageDigest)
 
 		// Get the manifesto data for this repo
 		raw, err := dockerGetData(metadataImageName)
