@@ -28,25 +28,25 @@ import (
 const tempFileName = "_manifesto.out"
 const tempContainerName = "manifesto.temp"
 
-// MetadataManifest gives the type of a piece of arbitrary manifesto data, and the digest where it can be found
+// MetadataManifesto gives the type of a piece of arbitrary manifesto data, and the digest where it can be found
 // A given image can only have one current piece of data of each type.
 // Example types might include: "seccomp", "approvals", "contact"
 // TODO!! Should we use a different name other than manifest? Could be confused with OCI image manifest?
-type MetadataManifest struct {
+type MetadataManifesto struct {
 	Type   string `json:"type"`
 	Digest string `json:"digest"`
 }
 
-// MetadataManifestTag associates a piece of manifesto data with a particular tagged version of the image
+// MetadataManifestoTag associates a piece of manifesto data with a particular tagged version of the image
 // TODO!! This should use the image hash ID not its tags, since those can be moved around
-type MetadataManifestTag struct {
-	Tag              string             `json:"tag"`
-	MetadataManifest []MetadataManifest `json:"manifest"`
+type ImageMetadataManifesto struct {
+	ImageDigest       string              `json:"image_digest"`
+	MetadataManifesto []MetadataManifesto `json:"manifesto"`
 }
 
-// MetadataManifestList holds all the metadata for a given image repository
-type MetadataManifestList struct {
-	Tags []MetadataManifestTag `json:"tags"`
+// MetadataManifestoList holds all the metadata for a given image repository
+type MetadataManifestoList struct {
+	Images []ImageMetadataManifesto `json:"images"`
 }
 
 func dockerGetData(imageName string) ([]byte, error) {
@@ -71,15 +71,19 @@ func dockerGetData(imageName string) ([]byte, error) {
 }
 
 func dockerGetDigest(imageName string) (digest string, err error) {
-	ex := exec.Command("docker", "inspect", imageName, "-f", "{{.RepoDigests}}")
+	// Make sure we have an up-to-date version of this image
+	ex := exec.Command("docker", "pull", imageName)
+	ex.Run()
+
+	ex = exec.Command("docker", "inspect", imageName, "-f", "{{.RepoDigests}}")
 	digestOut, err := ex.Output()
 	if err != nil {
-		return "", fmt.Errorf("Error reading inspect output: %v\n", err)
+		return "", fmt.Errorf("error reading inspect output: %v", err)
 	}
 
 	hh := strings.Split(string(digestOut), "@")
 	if len(hh) < 2 {
-		return "", fmt.Errorf("Digest not found in %s\n", digestOut)
+		return "", fmt.Errorf("digest not found in %s", digestOut)
 	}
 
 	digest = strings.TrimSpace(hh[1])
@@ -88,7 +92,7 @@ func dockerGetDigest(imageName string) (digest string, err error) {
 }
 
 func imageNameForManifest(imageName string) string {
-	return imageName + ":_manifest"
+	return imageName + ":_manifesto"
 }
 
 func repoAndTaggedNames(name string) (repoName string, imageName string) {
@@ -119,11 +123,7 @@ var getCmd = &cobra.Command{
 		repoName, imageName := repoAndTaggedNames(name)
 		metadataImageName := imageNameForManifest(repoName)
 
-		// Make sure we have an up-to-date version of this image
-		ex := exec.Command("docker", "pull", imageName)
-		ex.Run()
-
-		// Get its SHA
+		// Get the digest for the image
 		imageDigest, err := dockerGetDigest(imageName)
 		if err != nil {
 			fmt.Printf("Image '%s' not found\n", imageName)
@@ -138,23 +138,23 @@ var getCmd = &cobra.Command{
 			fmt.Printf("No manifesto data stored for image '%s'\n", imageName)
 			os.Exit(1)
 		}
-		var mml MetadataManifestList
+		var mml MetadataManifestoList
 		json.Unmarshal(raw, &mml)
 
 		found := false
-		for _, v := range mml.Tags {
+		for _, v := range mml.Images {
 			// TODO: for now this is checking against the image name including the tag, but since this
 			// can be moved we should really be finding the SHA for the tag and using that as the key in
 			// the manifesto data.
-			if v.Tag == imageName {
+			if v.ImageDigest == imageDigest {
 				// fmt.Printf("Found metadata for %v\n", imageName)
-				for _, m := range v.MetadataManifest {
+				for _, m := range v.MetadataManifesto {
 					if m.Type == metadata {
 						// fmt.Printf("%v\n", m.Digest)
 						// TODO!! These should go directly into blobs rather than into their own image
 						contents, err := dockerGetData(repoName + "@" + m.Digest)
 						if err != nil {
-							fmt.Printf("Couldn't find %s data from manifest: %v\n", metadata, err)
+							fmt.Printf("Couldn't find %s data from manifesto: %v\n", metadata, err)
 							os.Exit(1)
 						}
 

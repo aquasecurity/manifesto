@@ -37,23 +37,30 @@ var listCmd = &cobra.Command{
 		repoName, imageName := repoAndTaggedNames(name)
 		metadataImageName := imageNameForManifest(repoName)
 
+		// Get the digest for the image
+		imageDigest, err := dockerGetDigest(imageName)
+		if err != nil {
+			fmt.Printf("Image '%s' not found\n", imageName)
+			os.Exit(1)
+		}
+
+		fmt.Printf("Image %s has digest %s\n", imageName, imageDigest)
+
+		// Get the manifesto data for this repo
 		raw, err := dockerGetData(metadataImageName)
 		if err != nil {
 			fmt.Printf("No manifesto data stored for image '%s'\n", imageName)
 			os.Exit(1)
 		}
-		var mml MetadataManifestList
+		var mml MetadataManifestoList
 		json.Unmarshal(raw, &mml)
 
 		found := false
-		for _, v := range mml.Tags {
-			// TODO: for now this is checking against the image name including the tag, but since this
-			// can be moved we should really be finding the SHA for the tag and using that as the key in
-			// the manifesto data.
-			if v.Tag == imageName {
+		for _, v := range mml.Images {
+			if v.ImageDigest == imageDigest {
 				fmt.Printf("Metadata types stored for image '%s':\n", imageName)
 				found = true
-				for _, m := range v.MetadataManifest {
+				for _, m := range v.MetadataManifesto {
 					fmt.Printf("    %s\n", m.Type)
 				}
 			}

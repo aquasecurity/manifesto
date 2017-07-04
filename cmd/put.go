@@ -116,15 +116,23 @@ var putCmd = &cobra.Command{
 		repoName, imageName := repoAndTaggedNames(name)
 		metadataImageName := imageNameForManifest(repoName)
 
+		// Get the digest for this image
+		imageDigest, err := dockerGetDigest(imageName)
+		if err != nil {
+			fmt.Printf("Image '%s' not found\n", imageName)
+			os.Exit(1)
+		}
+
+		fmt.Printf("Image %s has digest %s\n", imageName, imageDigest)
+
 		// Store the piece of metadata we've been given
-		// TODO!! Should check that the image exists before adding metadata for it
 		// TODO!! These should go directly into blobs rather than into their own image
 		fmt.Printf("Storing metadata '%s' for '%s'\n", metadataName, imageName)
-		digest := dockerPutData(repoName+":_manifest_"+metadataName, metadataName, datafile)
+		digest := dockerPutData(repoName+":_manifesto_"+metadataName, metadataName, datafile)
 		fmt.Printf("Metadata '%s' for '%s' stored at %s\n", metadataName, imageName, digest)
 
 		// Read the current manifesto if it exists
-		var mml MetadataManifestList
+		var mml MetadataManifestoList
 		raw, err := dockerGetData(metadataImageName)
 		if err != nil {
 			fmt.Printf("Creating new manifesto for %s\n", repoName)
@@ -135,15 +143,14 @@ var putCmd = &cobra.Command{
 
 		replaced := false
 		found := false
-		for k, v := range mml.Tags {
-			// TODO!! This should be checking for images by SHA not by tag as these can move
-			if v.Tag == imageName {
+		for k, v := range mml.Images {
+			if v.ImageDigest == imageDigest {
 				found = true
-				for kk, m := range v.MetadataManifest {
+				for kk, m := range v.MetadataManifesto {
 					if m.Type == metadataName {
 						// Replace this with the new blob
 						fmt.Printf("Updating '%s' metadata in manifesto for '%s'\n", metadataName, imageName)
-						mml.Tags[k].MetadataManifest[kk].Digest = digest
+						mml.Images[k].MetadataManifesto[kk].Digest = digest
 						replaced = true
 					}
 				}
@@ -151,11 +158,11 @@ var putCmd = &cobra.Command{
 				// A new piece of metadata for this image
 				if !replaced {
 					fmt.Printf("Adding '%s' metadata to manifesto for '%s'\n", metadataName, imageName)
-					newTag := MetadataManifest{
+					newMetadata := MetadataManifesto{
 						Type:   metadataName,
 						Digest: digest,
 					}
-					mml.Tags[k].MetadataManifest = append(mml.Tags[k].MetadataManifest, newTag)
+					mml.Images[k].MetadataManifesto = append(mml.Images[k].MetadataManifesto, newMetadata)
 				}
 			}
 		}
@@ -163,20 +170,17 @@ var putCmd = &cobra.Command{
 		// Metadata for a new image
 		if !found {
 			fmt.Printf("Adding '%s' metadata to new manifesto for '%s'\n", metadataName, imageName)
-			newMMT := MetadataManifestTag{
-				Tag: imageName,
-				MetadataManifest: []MetadataManifest{
+			newImm := ImageMetadataManifesto{
+				ImageDigest: imageDigest,
+				MetadataManifesto: []MetadataManifesto{
 					{
 						Type:   metadataName,
 						Digest: digest,
 					},
 				},
 			}
-			mml.Tags = append(mml.Tags, newMMT)
-			// fmt.Printf("%#v\n", newMMT)
+			mml.Images = append(mml.Images, newImm)
 		}
-
-		// fmt.Printf("Updated manifesto: %v\n", mml)
 
 		// Write the manifesto file
 		data, err := json.Marshal(mml)
@@ -191,10 +195,11 @@ var putCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		dockerPutData(metadataImageName, "manifest", tempFileName)
+		// Store the manifesto file in the registry
+		dockerPutData(metadataImageName, "manifesto", tempFileName)
 		err = os.Remove(tempFileName)
 		if err != nil {
-			fmt.Printf("Couldn't remove file: %v\n", err)
+			fmt.Printf("Couldn't remove temp file: %v\n", err)
 		}
 	},
 }
