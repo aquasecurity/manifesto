@@ -31,14 +31,12 @@ const tempContainerName = "manifesto.temp"
 // MetadataManifesto gives the type of a piece of arbitrary manifesto data, and the digest where it can be found
 // A given image can only have one current piece of data of each type.
 // Example types might include: "seccomp", "approvals", "contact"
-// TODO!! Should we use a different name other than manifest? Could be confused with OCI image manifest?
 type MetadataManifesto struct {
 	Type   string `json:"type"`
 	Digest string `json:"digest"`
 }
 
 // MetadataManifestoTag associates a piece of manifesto data with a particular tagged version of the image
-// TODO!! This should use the image hash ID not its tags, since those can be moved around
 type ImageMetadataManifesto struct {
 	ImageDigest       string              `json:"image_digest"`
 	MetadataManifesto []MetadataManifesto `json:"manifesto"`
@@ -143,9 +141,6 @@ var getCmd = &cobra.Command{
 
 		found := false
 		for _, v := range mml.Images {
-			// TODO: for now this is checking against the image name including the tag, but since this
-			// can be moved we should really be finding the SHA for the tag and using that as the key in
-			// the manifesto data.
 			if v.ImageDigest == imageDigest {
 				// fmt.Printf("Found metadata for %v\n", imageName)
 				for _, m := range v.MetadataManifesto {
