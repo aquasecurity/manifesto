@@ -80,9 +80,9 @@ Where <filename> contains all the metadata references for this repository. An ex
 
 ```
 {
-	"tags": [{
-		"tag": "lizrice/imagetest:v1.0",
-		"manifest": [{
+	"images": [{
+		"image_digest": "70d2f067eb94ec8ab0530068a414d8dbe8c203244ae5d5ad4ba6eb1babd1c1c1",
+		"manifesto": [{
 				"type": "seccomp",
 				"digest": "sha256:a2fe22a6d44aa86432adad99481c3ad526ba35af2223df126620d20e38c70fac"
 			},
@@ -97,27 +97,24 @@ Where <filename> contains all the metadata references for this repository. An ex
 		]
 	}, 
     {
-		"tag": "lizrice/imagetest:v1.1",
-		"manifest": [{
+		"image_digest": "51d2f067eb94ec8ab0531987a414d8dbe8c203244ae5d5ad4ba6eb1babd1d54a",
+		"manifesto": [{
 				"type": "seccomp",
 				"digest": "sha256:b2f72296d04ea36435adae99481c3ad526ba35af2223df126620d20e38c9763c"
 			},
 			{
 				"type": "documentation",
-				"digest": "sha256:6ced8eb4e6a61639601e7073963ec04a80f70a11442157e1dd825f042879a6da"
+				"digest": "sha256:9ce18eb4e6a66639601e7073963ec04aa0f70a11442157e1d9825f042879abb1"
 			}
 		]
     }]
 }
 ```
 
-As noted below, the image is currently referred to by tag in this prototype, but this should be changed to the SHA digest for the image as the tag can change. 
-
 The *type* of each piece of metadata is simply an arbitrary string to identify that type of data. One possibility is to use standardized names (possibly as defined in the OCI image spec or similar) for the type to indicate that the associated data blob contains JSON in a standardized format (such as the vulnerability scanning report format).
 
 # To Do's 
 
-* The manifest file should refer to images by SHA rather than by tag (as the tag can move around). Storing metadata against a particular tag should store it against the SHA currently referred to by that tag. 
 * Metadata is currently pushed to a new image tagged (for example) `myorg/myimage:_manifest_<metadata type>`. It would be better to push it directly to a blob. 
 * Add data signing capabilities and verification with Notary. 
 * Code currently execs out to the docker client executable - would be better to use the go client and call the API directly. 
