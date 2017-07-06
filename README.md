@@ -65,7 +65,9 @@ In this proof of concept:
 
 * we store arbitrary metadata within the Docker registry 
 * we store a "manifesto" for the repository with the fixed tag "_manifesto"
-* the manifest is a json file with references to all the metadata stored for this repository
+* the manifesto is a json file with references to all the metadata stored for this repository
+
+![Manifesto is stored as an image, which references the data blobs for individual pieces of metadata](https://docs.google.com/drawings/d/1IGm4WnhL3J0hp2hdELrevyn3SMbgs0tlKNHjYIQHqtM/pub?w=960&h=720)
 
 ## How is this better than labels pointing to some arbitrary location where information is stored? 
 
@@ -117,8 +119,15 @@ Where <filename> contains all the metadata references for this repository. An ex
 
 The *type* of each piece of metadata is simply an arbitrary string to identify that type of data. One possibility is to use standardized names (possibly as defined in the OCI image spec or similar) for the type to indicate that the associated data blob contains JSON in a standardized format (such as the vulnerability scanning report format).
 
+## Wait - in Docker, it's *tags* that get signed in Notary. Why is metadata associated with image digests?
+When you pull a Docker image tagged, say, 1.4 you'll get whatever the latest signed version tagged 1.4 is. The tag can move between different images (i.e. with different digests) as updates are made, for example to update from 1.4.3 to 1.4.4. 
+
+For many types of image metadata (e.g. approval status, vulnerability scan report),a piece of metadata must be associated with a particular build i.e. identified by the digest. 
+
+When metadata is added, the metadata blob gets signed in Notary, as does the manifesto with the references to the metadata blobs. 
+
 # To Do's 
 
-* Metadata is currently pushed to a new image tagged (for example) `myorg/myimage:_manifesto_<metadata type>`. It would be better to push it directly to a blob. 
+* Metadata is currently pushed to a new image tagged (for example) `myorg/myimage:_manifesto_<metadata type>`. It would be better to push it directly to a blob (as indicated in the diagram above). 
 * Add data signing capabilities and verification with Notary. 
 * Code currently execs out to the docker client executable - would be better to use the go client and call the API directly. 
