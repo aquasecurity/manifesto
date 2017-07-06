@@ -64,7 +64,7 @@ $ ./manifesto get lizrice/imagetest something
 In this proof of concept:  
 
 * we store arbitrary metadata within the Docker registry 
-* we store a "manifest" for the repository with the fixed tag "_manifest"
+* we store a "manifesto" for the repository with the fixed tag "_manifesto"
 * the manifest is a json file with references to all the metadata stored for this repository
 
 ## How is this better than labels pointing to some arbitrary location where information is stored? 
@@ -119,6 +119,6 @@ The *type* of each piece of metadata is simply an arbitrary string to identify t
 
 # To Do's 
 
-* Metadata is currently pushed to a new image tagged (for example) `myorg/myimage:_manifest_<metadata type>`. It would be better to push it directly to a blob. 
+* Metadata is currently pushed to a new image tagged (for example) `myorg/myimage:_manifesto_<metadata type>`. It would be better to push it directly to a blob. 
 * Add data signing capabilities and verification with Notary. 
 * Code currently execs out to the docker client executable - would be better to use the go client and call the API directly. 
