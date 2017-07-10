@@ -1,13 +1,15 @@
 # manifesto
-Use Manifesto to store and query metadata for Docker images. This metadata can be information that you want to store about an image *post-build* - where labels are not sufficient. 
+Manifesto lets users store and query metadata for Docker images. This metadata can be information that you want to store about an image *post-build* - where labels are not sufficient. 
 
 Examples of the kind of information you might want to store post-build include: 
 
 * contact information for this image
+
+
 * seccomp profile
 * QA or other approvals for this image. 
 
-Although we haven't yet implemented it, the intention is that each piece of metadata could be signed using Notary. This means you can reliably get back the most recent version of that piece of metadata and know that it was put in place by someone with the authority to do so. 
+The intention is that each piece of metadata could be signed using Notary. This means you can reliably get back the most recent version of that piece of metadata and know that it was put in place by someone with the authority to do so. 
 
 At the moment this is a Proof of Concept - feedback and ideas very welcome. 
 
@@ -41,17 +43,17 @@ By default (like Docker images) manifesto assumes the 'latest' tag if a tag is n
 ### Example
 
 ```
-$ ./manifesto put lizrice/imagetest something ~/temp.json
-Storing metadata 'something' for 'lizrice/imagetest:latest'
-Metadata 'something' for 'lizrice/imagetest:latest' stored at sha256:7be34480285971f16eed284b13fa7d417649f18c7d1af9b2de6970ce99e3cbbd
-Updating manifesto for lizrice/imagetest
-Replacing 'something' metadata in manifesto for 'lizrice/imagetest:latest'
+$ ./manifesto put myorg/imagetest something ~/temp.json
+Storing metadata 'something' for 'myorg/imagetest:latest'
+Metadata 'something' for 'myorg/imagetest:latest' stored at sha256:7be34480285971f16eed284b13fa7d417649f18c7d1af9b2de6970ce99e3cbbd
+Updating manifesto for myorg/imagetest
+Replacing 'something' metadata in manifesto for 'myorg/imagetest:latest'
 
-$ ./manifesto list lizrice/imagetest
-Metadata types stored for image 'lizrice/imagetest:latest':
+$ ./manifesto list myorg/imagetest
+Metadata types stored for image 'myorg/imagetest:latest':
     something
 
-$ ./manifesto get lizrice/imagetest something
+$ ./manifesto get myorg/imagetest something
 {
   "key" : "value",
   "createdBy" : "liz",
@@ -122,7 +124,7 @@ The *type* of each piece of metadata is simply an arbitrary string to identify t
 ## Wait - in Docker, it's *tags* that get signed in Notary. Why is metadata associated with image digests?
 When you pull a Docker image tagged, say, 1.4 you'll get whatever the latest signed version tagged 1.4 is. The tag can move between different images (i.e. with different digests) as updates are made, for example to update from 1.4.3 to 1.4.4. 
 
-For many types of image metadata (e.g. approval status, vulnerability scan report),a piece of metadata must be associated with a particular build i.e. identified by the digest. 
+For many types of image metadata (e.g. approval status, vulnerability scan report) ,a piece of metadata must be associated with a particular build i.e. identified by the digest. 
 
 When metadata is added, the metadata blob gets signed in Notary, as does the manifesto with the references to the metadata blobs. 
 
