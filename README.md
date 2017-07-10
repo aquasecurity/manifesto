@@ -124,9 +124,9 @@ The *type* of each piece of metadata is simply an arbitrary string to identify t
 ## Wait - in Docker, it's *tags* that get signed in Notary. Why is metadata associated with image digests?
 When you pull a Docker image tagged, say, 1.4 you'll get whatever the latest signed version tagged 1.4 is. The tag can move between different images (i.e. with different digests) as updates are made, for example to update from 1.4.3 to 1.4.4. 
 
-For many types of image metadata (e.g. approval status, vulnerability scan report) ,a piece of metadata must be associated with a particular build i.e. identified by the digest. 
+For many types of image metadata (e.g. approval status, vulnerability scan report), a piece of metadata must be associated with a particular build i.e. identified by the digest. 
 
-When metadata is added, the metadata blob gets signed in Notary, as does the manifesto with the references to the metadata blobs. 
+When metadata is added, if signing is enabled the metadata blob gets signed in Notary, as does the manifesto with the references to the metadata blobs. 
 
 # To Do's 
 
