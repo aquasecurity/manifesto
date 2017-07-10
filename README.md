@@ -15,7 +15,7 @@ At the moment this is a Proof of Concept - feedback and ideas very welcome.
 
 ## Demo 
 
-[![asciicast](https://asciinema.org/a/4PJUTsNJa6sDvT3DSc0fJhSTW.png)](https://asciinema.org/a/4PJUTsNJa6sDvT3DSc0fJhSTW)
+[![asciicast](https://asciinema.org/a/128283.png)](https://asciinema.org/a/128283)
 
 ## Installation
 
