@@ -71,6 +71,10 @@ In this proof of concept:
 
 ![Manifesto is stored as an image, which references the data blobs for individual pieces of metadata](https://docs.google.com/drawings/d/1IGm4WnhL3J0hp2hdELrevyn3SMbgs0tlKNHjYIQHqtM/pub?w=960&h=720)
 
+## Can I store metadata for any image?
+
+As the metadata is stored in the same repository as the image itself, you can only store metadata for images you own. You could of course save a copy of a third-party image in your own repository, and store metadata alongside it. 
+
 ## How is this better than labels pointing to some arbitrary location where information is stored? 
 
 Putting metadata into the registry itself allows us to leverage both existing technology and existing infrastructure. An organisation that stores images in its own on-premise registry can simply store metadata in it, and if they are using Notary again they can simply re-use the same deployment. The signing of metadata uses exactly the same process as the signing of images, so any existing audits and controls can be re-used. 
