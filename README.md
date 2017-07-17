@@ -1,13 +1,11 @@
 # manifesto
 Manifesto lets users store and query metadata for Docker images. This metadata can be information that you want to store about an image *post-build* - where labels are not sufficient. 
 
-Examples of the kind of information you might want to store post-build include: 
-
-* contact information for this image
-
-
-* seccomp profile
-* QA or other approvals for this image. 
+## Use cases
+* **Managing QA approval status** After an image has been built, it needs to go through various testing and approval processes before your organization is ready to use it in production. Keep track of approval status, and who has given sign-off by storing it alongside the image itself. 
+* **Storing security profiles for an image** Manifesto makes it easy to associate a Seccomp or AppArmor profile with an image, so that you can automatically retrieve the correct profile at the point you want to run a container. 
+* **Support contacts** Store the phone number or Slack channel to contact in the event this container image starts causing problems in your live deployment. Update these details without needing to update the image. 
+* **Tracking active images** With CI/CD it's easy to end up with hundreds of thousands of container images in your registry. Use manifesto to store whether an image is actively being used in production - or to indicate the images that can safely be pruned.
 
 The intention is that each piece of metadata could be signed using Notary. This means you can reliably get back the most recent version of that piece of metadata and know that it was put in place by someone with the authority to do so. 
 
