@@ -70,6 +70,11 @@ In this proof of concept:
 
 ![Manifesto is stored as an image, which references the data blobs for individual pieces of metadata](https://docs.google.com/drawings/d/1IGm4WnhL3J0hp2hdELrevyn3SMbgs0tlKNHjYIQHqtM/pub?w=960&h=720)
 
+### Note - use of image tags in this prototype
+In this first Proof of Concept, the metadata is actually being stored as separate images, tagged as \_manifesto\_*metadata-type*. This allowed us to build the initial prototype very easily, but it means there are additional repository tags for each piece of metadata, which seems undesirable.  
+
+The next step is to use the Registry API to store metadata directly in blobs, as shown in the diagram above. This will mean there will just be one additional tag in the repository, \_manifesto. 
+
 ## Can I store metadata for any image?
 
 As the metadata is stored in the same repository as the image itself, you can only store metadata for images you own. You could of course save a copy of a third-party image in your own repository, and store metadata alongside it. 
