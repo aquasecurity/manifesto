@@ -22,7 +22,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// listCmd gets  list of available manifesto data for this image
+// listCmd gets a list of available manifesto data for this image
 var listCmd = &cobra.Command{
 	Use:   "list [IMAGE]",
 	Short: "List currently stored metadata for the container image",
@@ -34,7 +34,7 @@ var listCmd = &cobra.Command{
 		}
 
 		name := args[0]
-		repoName, imageName := repoAndTaggedNames(name)
+		repoName, imageName, _ := repoAndTaggedNames(name)
 		metadataImageName := imageNameForManifest(repoName)
 
 		// Get the digest for the image

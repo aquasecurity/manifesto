@@ -98,7 +98,7 @@ func dockerPutData(imageName string, metadataName string, datafile string) strin
 	return digest
 }
 
-// putCmd represents the cve command
+// putCmd stores manifesto data for this image
 var putCmd = &cobra.Command{
 	Use:   "put [IMAGE] [metadata] [datafile]",
 	Short: "Put metadata for the container image",
@@ -113,7 +113,7 @@ var putCmd = &cobra.Command{
 		metadataName := args[1]
 		datafile := args[2]
 
-		repoName, imageName := repoAndTaggedNames(name)
+		repoName, imageName, _ := repoAndTaggedNames(name)
 		metadataImageName := imageNameForManifest(repoName)
 
 		// Get the digest for this image

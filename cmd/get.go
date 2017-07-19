@@ -93,15 +93,15 @@ func imageNameForManifest(imageName string) string {
 	return imageName + ":_manifesto"
 }
 
-func repoAndTaggedNames(name string) (repoName string, imageName string) {
+func repoAndTaggedNames(name string) (repoName string, imageName string, tagName string) {
 	nameSlice := strings.Split(name, ":")
 	repoName = nameSlice[0]
-	tagName := "latest"
+	tagName = "latest"
 	if len(nameSlice) > 1 {
 		tagName = nameSlice[1]
 	}
 	imageName = repoName + ":" + tagName
-	return repoName, imageName
+	return repoName, imageName, tagName
 }
 
 // getCmd gets manifesto data
@@ -118,7 +118,7 @@ var getCmd = &cobra.Command{
 		name := args[0]
 		metadata := args[1]
 
-		repoName, imageName := repoAndTaggedNames(name)
+		repoName, imageName, _ := repoAndTaggedNames(name)
 		metadataImageName := imageNameForManifest(repoName)
 
 		// Get the digest for the image
