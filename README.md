@@ -1,6 +1,8 @@
 # manifesto
 Manifesto lets users store and query metadata for Docker images. This metadata can be information that you want to store about an image *post-build* - where labels are not sufficient. 
 
+[![Build Status](https://travis-ci.org/aquasecurity/manifesto.svg?branch=master)](https://travis-ci.org/aquasecurity/manifesto)
+
 ## Use cases
 * **Managing QA approval status** After an image has been built, it needs to go through various testing and approval processes before your organization is ready to use it in production. Keep track of approval status, and who has given sign-off by storing it alongside the image itself. 
 * **Storing security profiles for an image** Manifesto makes it easy to associate a Seccomp or AppArmor profile with an image, so that you can automatically retrieve the correct profile at the point you want to run a container. 
@@ -69,6 +71,11 @@ In this proof of concept:
 * the manifesto is a json file with references to all the metadata stored for this repository
 
 ![Manifesto is stored as an image, which references the data blobs for individual pieces of metadata](https://docs.google.com/drawings/d/1IGm4WnhL3J0hp2hdELrevyn3SMbgs0tlKNHjYIQHqtM/pub?w=960&h=720)
+
+### Note - use of image tags in this prototype
+In this first Proof of Concept, the metadata is actually being stored as separate images, tagged as \_manifesto\_*metadata-type*. This allowed us to build the initial prototype very easily, but it means there are additional repository tags for each piece of metadata, which seems undesirable.  
+
+The next step is to use the Registry API to store metadata directly in blobs, as shown in the diagram above. This will mean there will just be one additional tag in the repository, \_manifesto. 
 
 ## Can I store metadata for any image?
 
