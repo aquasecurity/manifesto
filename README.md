@@ -23,6 +23,8 @@ At the moment this is a Proof of Concept - feedback and ideas very welcome.
 * Clone this repo (or `go get github.com/aquasecurity/manifesto`)
 * Go to the directory and `go build .`
 
+You will also need to be logged in to manipulate data in the Docker Registry - do this with [`docker login`](https://docs.docker.com/engine/reference/commandline/login/)
+
 ## Usage
 
 ```
