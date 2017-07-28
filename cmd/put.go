@@ -21,8 +21,12 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/aquasecurity/manifesto/registry"
+
 	"github.com/spf13/cobra"
 )
+
+const dockerHub = "https://registry-1.docker.io"
 
 type Stream struct {
 	Stream string `json:"stream"`
@@ -119,10 +123,24 @@ var putCmd = &cobra.Command{
 		log.Debugf("Image has digest %s", imageDigest)
 
 		// Store the piece of metadata we've been given
-		// TODO!! These should go directly into blobs rather than into their own image
-		fmt.Printf("Storing metadata '%s' for '%s'\n", metadataName, imageName)
-		digest := dockerPutData(repoName+":_manifesto_"+metadataName, metadataName, datafile)
-		fmt.Printf("Metadata '%s' for '%s' stored at %s\n", metadataName, imageName, digest)
+
+		// We'll need the registry API from here on
+		r, err := registry.New(dockerHub, username, password)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error connecting to registry: %v\n", err)
+			os.Exit(1)
+		}
+
+		f, err := os.Open(datafile)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error opening file %s: %v\n", datafile, err)
+		}
+
+		digest, err := r.UploadBlob(repoName, f)
+		if err != nil {
+			fmt.Printf("Error uploading metadata to registry: %v\n", err)
+			os.Exit(1)
+		}
 
 		// Read the current manifesto if it exists
 		var mml MetadataManifestoList

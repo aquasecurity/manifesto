@@ -22,6 +22,8 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/aquasecurity/manifesto/registry"
+
 	"github.com/spf13/cobra"
 )
 
@@ -132,6 +134,14 @@ var getCmd = &cobra.Command{
 		}
 		var mml MetadataManifestoList
 		json.Unmarshal(raw, &mml)
+		log.Debug("Repo metadata index retrieved")
+
+		// We'll need the registry API from here on
+		r, err := registry.New(dockerHub, username, password)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error connecting to registry: %v\n", err)
+			os.Exit(1)
+		}
 
 		found := false
 		for _, v := range mml.Images {
@@ -139,12 +149,18 @@ var getCmd = &cobra.Command{
 				log.Debug("Image metadata retrieved")
 				for _, m := range v.MetadataManifesto {
 					if m.Type == metadata {
-						// fmt.Printf("%v\n", m.Digest)
-						// TODO!! These should go directly into blobs rather than into their own image
-						contents, err := dockerGetData(repoName + "@" + m.Digest)
+						log.Debugf("'%s' metadata identified", metadata)
+						contents, err := r.GetBlob(repoName, m.Digest)
 						if err != nil {
-							fmt.Printf("Couldn't find %s data from manifesto: %v\n", metadata, err)
-							os.Exit(1)
+							// Maybe this metadata was stored as an image by a previous version of manifesto
+							// so try getting it that way
+							// TODO!! Retire this one day
+							log.Debug("This metadata is stored in an image rather than a blob")
+							contents, err = dockerGetData(repoName + "@" + m.Digest)
+							if err != nil {
+								fmt.Printf("Couldn't find %s data from manifesto: %v\n", metadata, err)
+								os.Exit(1)
+							}
 						}
 
 						fmt.Printf("%s\n", string(contents))

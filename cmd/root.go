@@ -25,6 +25,8 @@ import (
 )
 
 var (
+	username string
+	password string
 	verbose  bool
 	log      = logging.MustGetLogger("")
 )
@@ -66,6 +68,8 @@ func init() {
 	// Cobra supports Persistent Flags, which, if defined here,
 	// will be global for your application.
 
+	RootCmd.PersistentFlags().StringVarP(&username, "username", "u", "", "Registry username (can also be passed in with the env var REGISTRY_USERNAME)")
+	RootCmd.PersistentFlags().StringVarP(&password, "password", "p", "", "Registry password (can also be passed in with the env var REGISTRY_PASSWORD)")
 	RootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Send debug output to stderr")
 
 	// Cobra also supports local flags, which will only run
@@ -78,9 +82,14 @@ func initConfig() {
 	viper.AddConfigPath(".")          // adding current directory as first search path
 	viper.AddConfigPath("$HOME")      // adding home directory
 
+	viper.BindEnv("username", "REGISTRY_USERNAME")
+	viper.BindEnv("password", "REGISTRY_PASSWORD")
 	viper.BindEnv("verbose", "MANIFESTO_VERBOSE")
 
 	viper.AutomaticEnv() // read in environment variables that match
+
+	viper.BindPFlag("username", RootCmd.Flags().Lookup("username"))
+	viper.BindPFlag("password", RootCmd.Flags().Lookup("password"))
 	viper.BindPFlag("verbose", RootCmd.Flags().Lookup("verbose"))
 
 	// If a config file is found, read it in.
@@ -89,6 +98,8 @@ func initConfig() {
 		os.Exit(1)
 	}
 
+	username = viper.GetString("username")
+	password = viper.GetString("password")
 	verbose = viper.GetBool("verbose")
 
 	// Set up logging
