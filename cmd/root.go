@@ -34,8 +34,10 @@ var (
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
 	Use:   "manifesto",
-	Short: "Inspect your containers and container images",
-	Long:  `Inspect your containers and container images`,
+	Short: "Manage metadata associated with your container images",
+	Long: `Store, retrieve and list pieces of metadata alongside your container images in the registry. 
+Metadata is associated with specific images (by hash).
+	`,
 
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
