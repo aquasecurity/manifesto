@@ -93,9 +93,8 @@ func initConfig() {
 	viper.BindPFlag("verbose", RootCmd.Flags().Lookup("verbose"))
 
 	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err != nil {
-		fmt.Printf("Error reading config file %s: %v\n", viper.ConfigFileUsed(), err)
-		os.Exit(1)
+	if err := viper.ReadInConfig(); err == nil {
+		log.Debugf("Using config file %s", viper.ConfigFileUsed())
 	}
 
 	username = viper.GetString("username")
