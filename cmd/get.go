@@ -36,7 +36,7 @@ type MetadataManifesto struct {
 	Digest string `json:"digest"`
 }
 
-// MetadataManifestoTag associates a piece of manifesto data with a particular tagged version of the image
+// ImageMetadataManifesto associates a piece of manifesto data with a particular image
 type ImageMetadataManifesto struct {
 	ImageDigest       string              `json:"image_digest"`
 	MetadataManifesto []MetadataManifesto `json:"manifesto"`
@@ -48,14 +48,10 @@ type MetadataManifestoList struct {
 }
 
 func dockerGetData(imageName string) ([]byte, error) {
-	ex := exec.Command("docker", "pull", imageName)
-	ex.Run()
-	ex = exec.Command("docker", "create", "--name="+tempContainerName, imageName, "x")
-	ex.Run()
-	ex = exec.Command("docker", "cp", tempContainerName+":/data", tempFileName)
-	ex.Run()
-	ex = exec.Command("docker", append([]string{"rm"}, tempContainerName)...)
-	ex.Run()
+	execCommand("docker", "pull", imageName)
+	execCommand("docker", "create", "--name="+tempContainerName, imageName, "x")
+	execCommand("docker", "cp", tempContainerName+":/data", tempFileName)
+	execCommand("docker", append([]string{"rm"}, tempContainerName)...)
 	raw, err := ioutil.ReadFile(tempFileName)
 	if err != nil {
 		return raw, err
@@ -70,10 +66,8 @@ func dockerGetData(imageName string) ([]byte, error) {
 
 func dockerGetDigest(imageName string) (digest string, err error) {
 	// Make sure we have an up-to-date version of this image
-	ex := exec.Command("docker", "pull", imageName)
-	ex.Run()
-
-	ex = exec.Command("docker", "inspect", imageName, "-f", "{{.RepoDigests}}")
+	execCommand("docker", "pull", imageName)
+	ex := exec.Command("docker", "inspect", imageName, "-f", "{{.RepoDigests}}")
 	digestOut, err := ex.Output()
 	if err != nil {
 		return "", fmt.Errorf("error reading inspect output: %v", err)
@@ -128,7 +122,7 @@ var getCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		// fmt.Printf("Image %s has digest %s\n", imageName, imageDigest)
+		log.Debugf("Image has digest %s", imageDigest)
 
 		// Get the metadata manifest for this image
 		raw, err := dockerGetData(metadataImageName)
@@ -142,7 +136,7 @@ var getCmd = &cobra.Command{
 		found := false
 		for _, v := range mml.Images {
 			if v.ImageDigest == imageDigest {
-				// fmt.Printf("Found metadata for %v\n", imageName)
+				log.Debug("Image metadata retrieved")
 				for _, m := range v.MetadataManifesto {
 					if m.Type == metadata {
 						// fmt.Printf("%v\n", m.Digest)

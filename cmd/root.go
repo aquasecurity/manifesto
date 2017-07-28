@@ -17,18 +17,24 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"os/exec"
 
+	"github.com/op/go-logging"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-var cfgFile string
+var (
+	verbose  bool
+	log      = logging.MustGetLogger("")
+)
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
 	Use:   "manifesto",
 	Short: "Inspect your containers and container images",
 	Long:  `Inspect your containers and container images`,
+
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	//	Run: func(cmd *cobra.Command, args []string) { },
@@ -43,6 +49,16 @@ func Execute() {
 	}
 }
 
+func execCommand(name string, arg ...string) {
+	ex := exec.Command(name, arg...)
+	ex.Stdin = os.Stdin
+	if verbose {
+		ex.Stderr = os.Stderr
+		ex.Stdout = os.Stdout
+	}
+	ex.Run()
+}
+
 func init() {
 	cobra.OnInitialize(initConfig)
 
@@ -50,23 +66,35 @@ func init() {
 	// Cobra supports Persistent Flags, which, if defined here,
 	// will be global for your application.
 
-	// RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.manifesto.yaml)")
+	RootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Send debug output to stderr")
+
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 }
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	if cfgFile != "" { // enable ability to specify config file via flag
-		viper.SetConfigFile(cfgFile)
-	}
-
 	viper.SetConfigName(".manifesto") // name of config file (without extension)
-	viper.AddConfigPath("$HOME")      // adding home directory as first search path
-	viper.AutomaticEnv()              // read in environment variables that match
+	viper.AddConfigPath(".")          // adding current directory as first search path
+	viper.AddConfigPath("$HOME")      // adding home directory
+
+	viper.BindEnv("verbose", "MANIFESTO_VERBOSE")
+
+	viper.AutomaticEnv() // read in environment variables that match
+	viper.BindPFlag("verbose", RootCmd.Flags().Lookup("verbose"))
 
 	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
+	if err := viper.ReadInConfig(); err != nil {
+		fmt.Printf("Error reading config file %s: %v\n", viper.ConfigFileUsed(), err)
+		os.Exit(1)
+	}
+
+	verbose = viper.GetBool("verbose")
+
+	// Set up logging
+	if verbose {
+		logging.SetLevel(logging.DEBUG, "")
+	} else {
+		logging.SetLevel(logging.INFO, "")
 	}
 }

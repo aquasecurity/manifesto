@@ -44,7 +44,7 @@ var listCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		// fmt.Printf("Image %s has digest %s\n", imageName, imageDigest)
+		log.Debugf("Image has digest %s", imageDigest)
 
 		// Get the manifesto data for this repo
 		raw, err := dockerGetData(metadataImageName)
@@ -54,6 +54,8 @@ var listCmd = &cobra.Command{
 		}
 		var mml MetadataManifestoList
 		json.Unmarshal(raw, &mml)
+
+		log.Debugf("Metadata index: %v", mml)
 
 		found := false
 		for _, v := range mml.Images {

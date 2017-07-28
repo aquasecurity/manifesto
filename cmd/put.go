@@ -20,7 +20,6 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"os/exec"
 
 	"github.com/spf13/cobra"
 )
@@ -66,10 +65,7 @@ func dockerPutData(imageName string, metadataName string, datafile string) strin
 		os.Exit(1)
 	}
 
-	ex := exec.Command("docker", "build", "-f", df.Name(), "-t", imageName, ".")
-	// ex.Stderr = os.Stderr
-	// ex.Stdout = os.Stdout
-	ex.Run()
+	execCommand("docker", "build", "-f", df.Name(), "-t", imageName, ".")
 
 	// Delete the Dockerfile and the temporary file
 	err = os.Remove(df.Name())
@@ -84,10 +80,7 @@ func dockerPutData(imageName string, metadataName string, datafile string) strin
 		os.Exit(1)
 	}
 
-	ex = exec.Command("docker", "push", imageName)
-	// ex.Stderr = os.Stderr
-	// ex.Stdout = os.Stdout
-	ex.Run()
+	execCommand("docker", "push", imageName)
 
 	digest, err := dockerGetDigest(imageName)
 	if err != nil {
@@ -123,7 +116,7 @@ var putCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		// fmt.Printf("Image %s has digest %s\n", imageName, imageDigest)
+		log.Debugf("Image has digest %s", imageDigest)
 
 		// Store the piece of metadata we've been given
 		// TODO!! These should go directly into blobs rather than into their own image
