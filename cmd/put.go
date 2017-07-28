@@ -21,6 +21,8 @@ import (
 	"io/ioutil"
 	"os"
 
+	"golang.org/x/crypto/ssh/terminal"
+
 	"github.com/aquasecurity/manifesto/registry"
 
 	"github.com/spf13/cobra"
@@ -112,6 +114,20 @@ var putCmd = &cobra.Command{
 
 		repoName, imageName, _ := repoAndTaggedNames(name)
 		metadataImageName := imageNameForManifest(repoName)
+
+		if username == "" {
+			fmt.Printf("Username: ")
+			fmt.Scanf("%s", &username)
+		}
+		if password == "" {
+			fmt.Printf("Password: ")
+			pwd, err := terminal.ReadPassword(0)
+			if err != nil {
+				fmt.Printf("error reading password: %v", err)
+				os.Exit(1)
+			}
+			password = string(pwd)
+		}
 
 		// Get the digest for this image
 		imageDigest, err := dockerGetDigest(imageName)
