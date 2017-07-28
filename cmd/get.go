@@ -50,7 +50,11 @@ type MetadataManifestoList struct {
 }
 
 func dockerGetData(imageName string) ([]byte, error) {
-	execCommand("docker", "pull", imageName)
+	err := execCommand("docker", "pull", imageName)
+	if err != nil {
+		return []byte{}, err
+	}
+
 	execCommand("docker", "create", "--name="+tempContainerName, imageName, "x")
 	execCommand("docker", "cp", tempContainerName+":/data", tempFileName)
 	execCommand("docker", append([]string{"rm"}, tempContainerName)...)
@@ -60,7 +64,7 @@ func dockerGetData(imageName string) ([]byte, error) {
 	}
 	err = os.Remove(tempFileName)
 	if err != nil {
-		fmt.Printf("%v\n", err)
+		return raw, err
 	}
 
 	return raw, err

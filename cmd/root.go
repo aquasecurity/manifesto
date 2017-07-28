@@ -51,14 +51,14 @@ func Execute() {
 	}
 }
 
-func execCommand(name string, arg ...string) {
+func execCommand(name string, arg ...string) error {
 	ex := exec.Command(name, arg...)
 	ex.Stdin = os.Stdin
 	if verbose {
 		ex.Stderr = os.Stderr
 		ex.Stdout = os.Stdout
 	}
-	ex.Run()
+	return ex.Run()
 }
 
 func init() {
