@@ -115,6 +115,8 @@ var putCmd = &cobra.Command{
 		repoName, imageName, _ := repoAndTaggedNames(name)
 		metadataImageName := imageNameForManifest(repoName)
 
+		fmt.Printf("Storing metadata '%s' for image '%s'\n", metadataName, imageName)
+
 		if username == "" {
 			fmt.Printf("Username: ")
 			fmt.Scanf("%s", &username)
@@ -122,6 +124,7 @@ var putCmd = &cobra.Command{
 		if password == "" {
 			fmt.Printf("Password: ")
 			pwd, err := terminal.ReadPassword(0)
+			fmt.Println()
 			if err != nil {
 				fmt.Printf("error reading password: %v", err)
 				os.Exit(1)
@@ -157,6 +160,8 @@ var putCmd = &cobra.Command{
 			fmt.Printf("Error uploading metadata to registry: %v\n", err)
 			os.Exit(1)
 		}
+
+		fmt.Printf("Metadata '%s' for image '%s' stored at %s\n", metadataName, imageName, digest)
 
 		// Read the current manifesto if it exists
 		var mml MetadataManifestoList
