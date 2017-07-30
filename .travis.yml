@@ -1,1 +1,20 @@
 language: go
+sudo: false
+
+go:
+- 1.8
+
+jobs:
+  include:
+    - script: make all
+      deploy:
+        provider: releases
+        api_key:
+          secure: ANIoJGqDvpSDoAjPOF4JtdkSZEMV69HaTEDyAX2hFHkOcdDk7//8Lr+rO7ZN2jtw3mSz0I9cjO61T7t4A2l/LwgX2mK6zEPAMvA8FJVqZDNYh1TGtmeKa3fXJIStPrRcQI7ncKzBU3Z1CGnMUncC9TO2ypWMz9lH3H0TtLb0F4CO+wZ0CzYdjOCcub3j2DdL4AVWTFPeluKFPpevjWXkvuIrU0rROO0e1IICzLO2YBNRUhhaIp2pz82eo1bAmCINdi+0kPIXzpV8GhFqiNYN85bqLIehQY0qyABARplRNaH/pcNmrIQ5TiT4VXvhiwRpDww1JB5xlwZJDi6hxDE7lfL/6b7LBiG62MELr77nVW4heKhymxJZ/Sk8SmqU5LSUABz15KB/i7TMoP1XDXq7HQQYJF+ZyV6I4xKeRHm0gqhMH7fwAiEkF9w0wJsODbomISbgbN+I+MTNV7fsZLS5kmjWGQ5sNUbAMEZ1u63xmP+9bIPU8VPsVdYY4BK7tMv8HPPtQfydJpLotm+g9sN3hirFYjXl/bqBmuUXM6XQiLIbVcykyzsXg5k4m15XeHZdwL8ohk2KaDOxDeZnV5OlrdKOzZDoU8olFmqgwEzQktT6e8ebYl5iSvUk61xaVS0jXuxxH3nS5p/Nv5jtOOAfOxb3mBlhhezp82Gy1PerqZQ=
+        file:
+        - releases/manifesto-darwin-amd64.tar.gz
+        - releases/manifesto-windows-amd64.tar.gz
+        - releases/manifesto-linux-amd64.tar.gz
+        on:
+          repo: aquasecurity/manifesto
+          tags: true
