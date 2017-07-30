@@ -14,6 +14,9 @@ endif
 
 all: build
 
+$(GOPATH)/bin/glide$(suffix):
+	go get github.com/Masterminds/glide
+
 $(GOPATH)/bin/manifesto$(suffix):
 	go get github.com/aquasecurity/manifesto
 
