@@ -22,6 +22,8 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/aquasecurity/manifesto/registry"
+
 	"github.com/spf13/cobra"
 )
 
@@ -36,7 +38,7 @@ type MetadataManifesto struct {
 	Digest string `json:"digest"`
 }
 
-// MetadataManifestoTag associates a piece of manifesto data with a particular tagged version of the image
+// ImageMetadataManifesto associates a piece of manifesto data with a particular image
 type ImageMetadataManifesto struct {
 	ImageDigest       string              `json:"image_digest"`
 	MetadataManifesto []MetadataManifesto `json:"manifesto"`
@@ -48,21 +50,21 @@ type MetadataManifestoList struct {
 }
 
 func dockerGetData(imageName string) ([]byte, error) {
-	ex := exec.Command("docker", "pull", imageName)
-	ex.Run()
-	ex = exec.Command("docker", "create", "--name="+tempContainerName, imageName, "x")
-	ex.Run()
-	ex = exec.Command("docker", "cp", tempContainerName+":/data", tempFileName)
-	ex.Run()
-	ex = exec.Command("docker", append([]string{"rm"}, tempContainerName)...)
-	ex.Run()
+	err := execCommand("docker", "pull", imageName)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	execCommand("docker", "create", "--name="+tempContainerName, imageName, "x")
+	execCommand("docker", "cp", tempContainerName+":/data", tempFileName)
+	execCommand("docker", append([]string{"rm"}, tempContainerName)...)
 	raw, err := ioutil.ReadFile(tempFileName)
 	if err != nil {
 		return raw, err
 	}
 	err = os.Remove(tempFileName)
 	if err != nil {
-		fmt.Printf("%v\n", err)
+		return raw, err
 	}
 
 	return raw, err
@@ -70,10 +72,8 @@ func dockerGetData(imageName string) ([]byte, error) {
 
 func dockerGetDigest(imageName string) (digest string, err error) {
 	// Make sure we have an up-to-date version of this image
-	ex := exec.Command("docker", "pull", imageName)
-	ex.Run()
-
-	ex = exec.Command("docker", "inspect", imageName, "-f", "{{.RepoDigests}}")
+	execCommand("docker", "pull", imageName)
+	ex := exec.Command("docker", "inspect", imageName, "-f", "{{.RepoDigests}}")
 	digestOut, err := ex.Output()
 	if err != nil {
 		return "", fmt.Errorf("error reading inspect output: %v", err)
@@ -93,15 +93,15 @@ func imageNameForManifest(imageName string) string {
 	return imageName + ":_manifesto"
 }
 
-func repoAndTaggedNames(name string) (repoName string, imageName string) {
+func repoAndTaggedNames(name string) (repoName string, imageName string, tagName string) {
 	nameSlice := strings.Split(name, ":")
 	repoName = nameSlice[0]
-	tagName := "latest"
+	tagName = "latest"
 	if len(nameSlice) > 1 {
 		tagName = nameSlice[1]
 	}
 	imageName = repoName + ":" + tagName
-	return repoName, imageName
+	return repoName, imageName, tagName
 }
 
 // getCmd gets manifesto data
@@ -118,7 +118,7 @@ var getCmd = &cobra.Command{
 		name := args[0]
 		metadata := args[1]
 
-		repoName, imageName := repoAndTaggedNames(name)
+		repoName, imageName, _ := repoAndTaggedNames(name)
 		metadataImageName := imageNameForManifest(repoName)
 
 		// Get the digest for the image
@@ -128,7 +128,7 @@ var getCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		// fmt.Printf("Image %s has digest %s\n", imageName, imageDigest)
+		log.Debugf("Image has digest %s", imageDigest)
 
 		// Get the metadata manifest for this image
 		raw, err := dockerGetData(metadataImageName)
@@ -138,19 +138,33 @@ var getCmd = &cobra.Command{
 		}
 		var mml MetadataManifestoList
 		json.Unmarshal(raw, &mml)
+		log.Debug("Repo metadata index retrieved")
+
+		// We'll need the registry API from here on
+		r, err := registry.New(dockerHub, username, password)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error connecting to registry: %v\n", err)
+			os.Exit(1)
+		}
 
 		found := false
 		for _, v := range mml.Images {
 			if v.ImageDigest == imageDigest {
-				// fmt.Printf("Found metadata for %v\n", imageName)
+				log.Debug("Image metadata retrieved")
 				for _, m := range v.MetadataManifesto {
 					if m.Type == metadata {
-						// fmt.Printf("%v\n", m.Digest)
-						// TODO!! These should go directly into blobs rather than into their own image
-						contents, err := dockerGetData(repoName + "@" + m.Digest)
+						log.Debugf("'%s' metadata identified", metadata)
+						contents, err := r.GetBlob(repoName, m.Digest)
 						if err != nil {
-							fmt.Printf("Couldn't find %s data from manifesto: %v\n", metadata, err)
-							os.Exit(1)
+							// Maybe this metadata was stored as an image by a previous version of manifesto
+							// so try getting it that way
+							// TODO!! Retire this one day
+							log.Debug("This metadata is stored in an image rather than a blob")
+							contents, err = dockerGetData(repoName + "@" + m.Digest)
+							if err != nil {
+								fmt.Printf("Couldn't find %s data from manifesto: %v\n", metadata, err)
+								os.Exit(1)
+							}
 						}
 
 						fmt.Printf("%s\n", string(contents))

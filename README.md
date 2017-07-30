@@ -29,7 +29,8 @@ You will also need to be logged in to manipulate data in the Docker Registry - d
 
 ```
 $ ./manifesto --help
-Inspect your containers and container images
+Store, retrieve and list pieces of metadata alongside your container images in the registry.
+Metadata is associated with specific images (by hash).
 
 Usage:
   manifesto [command]
@@ -39,6 +40,14 @@ Available Commands:
   help        Help about any command
   list        List currently stored metadata for the container image
   put         Put metadata for the container image
+
+Flags:
+  -h, --help              help for manifesto
+  -p, --password string   Registry password (can also be passed in with the env var REGISTRY_PASSWORD)
+  -u, --username string   Registry username (can also be passed in with the env var REGISTRY_USERNAME)
+  -v, --verbose           Send debug output to stderr
+
+Use "manifesto [command] --help" for more information about a command.
 ```
 
 By default (like Docker images) manifesto assumes the 'latest' tag if a tag is not given. 
@@ -75,9 +84,9 @@ In this proof of concept:
 ![Manifesto is stored as an image, which references the data blobs for individual pieces of metadata](https://docs.google.com/drawings/d/1IGm4WnhL3J0hp2hdELrevyn3SMbgs0tlKNHjYIQHqtM/pub?w=960&h=720)
 
 ### Note - use of image tags in this prototype
-In this first Proof of Concept, the metadata is actually being stored as separate images, tagged as \_manifesto\_*metadata-type*. This allowed us to build the initial prototype very easily, but it means there are additional repository tags for each piece of metadata, which seems undesirable.  
+In v 0.0.1 the metadata was stored as separate images, tagged as \_manifesto\_*metadata-type*. This allowed us to build the initial prototype very easily, but it meant there were additional repository tags for each piece of metadata, which seems undesirable.  
 
-The next step is to use the Registry API to store metadata directly in blobs, as shown in the diagram above. This will mean there will just be one additional tag in the repository, \_manifesto. 
+In this version we use the Registry API to store metadata directly in blobs, as shown in the diagram above. This will mean there will just be one additional tag in the repository, \_manifesto. 
 
 ## Can I store metadata for any image?
 
@@ -142,6 +151,7 @@ When metadata is added, if signing is enabled the metadata blob gets signed in N
 
 # To Do's 
 
-* Metadata is currently pushed to a new image tagged (for example) `myorg/myimage:_manifesto_<metadata type>`. It would be better to push it directly to a blob (as indicated in the diagram above). 
 * Add data signing capabilities and verification with Notary. 
 * Code currently execs out to the docker client executable - would be better to use the go client and call the API directly. 
+* You need to enter your Docker Hub username and password to put metadata (or pass them in as env vars or parameters). Other commands currently exec out to docker, which means an existing `docker login` is sufficient for the credentials.  It would be better to be consistent, and even better if there were a way of using the credentials from that `docker login`
+

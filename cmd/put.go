@@ -20,10 +20,15 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"os/exec"
+
+	"golang.org/x/crypto/ssh/terminal"
+
+	"github.com/aquasecurity/manifesto/registry"
 
 	"github.com/spf13/cobra"
 )
+
+const dockerHub = "https://registry-1.docker.io"
 
 type Stream struct {
 	Stream string `json:"stream"`
@@ -66,10 +71,7 @@ func dockerPutData(imageName string, metadataName string, datafile string) strin
 		os.Exit(1)
 	}
 
-	ex := exec.Command("docker", "build", "-f", df.Name(), "-t", imageName, ".")
-	// ex.Stderr = os.Stderr
-	// ex.Stdout = os.Stdout
-	ex.Run()
+	execCommand("docker", "build", "-f", df.Name(), "-t", imageName, ".")
 
 	// Delete the Dockerfile and the temporary file
 	err = os.Remove(df.Name())
@@ -84,10 +86,7 @@ func dockerPutData(imageName string, metadataName string, datafile string) strin
 		os.Exit(1)
 	}
 
-	ex = exec.Command("docker", "push", imageName)
-	// ex.Stderr = os.Stderr
-	// ex.Stdout = os.Stdout
-	ex.Run()
+	execCommand("docker", "push", imageName)
 
 	digest, err := dockerGetDigest(imageName)
 	if err != nil {
@@ -98,7 +97,7 @@ func dockerPutData(imageName string, metadataName string, datafile string) strin
 	return digest
 }
 
-// putCmd represents the cve command
+// putCmd stores manifesto data for this image
 var putCmd = &cobra.Command{
 	Use:   "put [IMAGE] [metadata] [datafile]",
 	Short: "Put metadata for the container image",
@@ -113,8 +112,25 @@ var putCmd = &cobra.Command{
 		metadataName := args[1]
 		datafile := args[2]
 
-		repoName, imageName := repoAndTaggedNames(name)
+		repoName, imageName, _ := repoAndTaggedNames(name)
 		metadataImageName := imageNameForManifest(repoName)
+
+		fmt.Printf("Storing metadata '%s' for image '%s'\n", metadataName, imageName)
+
+		if username == "" {
+			fmt.Printf("Username: ")
+			fmt.Scanf("%s", &username)
+		}
+		if password == "" {
+			fmt.Printf("Password: ")
+			pwd, err := terminal.ReadPassword(0)
+			fmt.Println()
+			if err != nil {
+				fmt.Printf("error reading password: %v", err)
+				os.Exit(1)
+			}
+			password = string(pwd)
+		}
 
 		// Get the digest for this image
 		imageDigest, err := dockerGetDigest(imageName)
@@ -123,13 +139,29 @@ var putCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		// fmt.Printf("Image %s has digest %s\n", imageName, imageDigest)
+		log.Debugf("Image has digest %s", imageDigest)
 
 		// Store the piece of metadata we've been given
-		// TODO!! These should go directly into blobs rather than into their own image
-		fmt.Printf("Storing metadata '%s' for '%s'\n", metadataName, imageName)
-		digest := dockerPutData(repoName+":_manifesto_"+metadataName, metadataName, datafile)
-		fmt.Printf("Metadata '%s' for '%s' stored at %s\n", metadataName, imageName, digest)
+
+		// We'll need the registry API from here on
+		r, err := registry.New(dockerHub, username, password)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error connecting to registry: %v\n", err)
+			os.Exit(1)
+		}
+
+		f, err := os.Open(datafile)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error opening file %s: %v\n", datafile, err)
+		}
+
+		digest, err := r.UploadBlob(repoName, f)
+		if err != nil {
+			fmt.Printf("Error uploading metadata to registry: %v\n", err)
+			os.Exit(1)
+		}
+
+		fmt.Printf("Metadata '%s' for image '%s' stored at %s\n", metadataName, imageName, digest)
 
 		// Read the current manifesto if it exists
 		var mml MetadataManifestoList
