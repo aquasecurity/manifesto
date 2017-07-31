@@ -21,8 +21,6 @@ import (
 	"io/ioutil"
 	"os"
 
-	"golang.org/x/crypto/ssh/terminal"
-
 	"github.com/aquasecurity/manifesto/registry"
 
 	"github.com/spf13/cobra"
@@ -117,21 +115,6 @@ var putCmd = &cobra.Command{
 
 		fmt.Printf("Storing metadata '%s' for image '%s'\n", metadataName, imageName)
 
-		if username == "" {
-			fmt.Printf("Username: ")
-			fmt.Scanf("%s", &username)
-		}
-		if password == "" {
-			fmt.Printf("Password: ")
-			pwd, err := terminal.ReadPassword(0)
-			fmt.Println()
-			if err != nil {
-				fmt.Printf("error reading password: %v", err)
-				os.Exit(1)
-			}
-			password = string(pwd)
-		}
-
 		// Get the digest for this image
 		imageDigest, err := dockerGetDigest(imageName)
 		if err != nil {
@@ -144,6 +127,7 @@ var putCmd = &cobra.Command{
 		// Store the piece of metadata we've been given
 
 		// We'll need the registry API from here on
+		ensureRegistryCredentials()
 		r, err := registry.New(dockerHub, username, password)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error connecting to registry: %v\n", err)
