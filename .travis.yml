@@ -1,21 +1,19 @@
 language: go
 sudo: false
-
 go:
 - 1.8
-
 jobs:
   include:
-    - script: make all
-      deploy:
-        provider: releases
-        api_key:
-          secure: ANIoJGqDvpSDoAjPOF4JtdkSZEMV69HaTEDyAX2hFHkOcdDk7//8Lr+rO7ZN2jtw3mSz0I9cjO61T7t4A2l/LwgX2mK6zEPAMvA8FJVqZDNYh1TGtmeKa3fXJIStPrRcQI7ncKzBU3Z1CGnMUncC9TO2ypWMz9lH3H0TtLb0F4CO+wZ0CzYdjOCcub3j2DdL4AVWTFPeluKFPpevjWXkvuIrU0rROO0e1IICzLO2YBNRUhhaIp2pz82eo1bAmCINdi+0kPIXzpV8GhFqiNYN85bqLIehQY0qyABARplRNaH/pcNmrIQ5TiT4VXvhiwRpDww1JB5xlwZJDi6hxDE7lfL/6b7LBiG62MELr77nVW4heKhymxJZ/Sk8SmqU5LSUABz15KB/i7TMoP1XDXq7HQQYJF+ZyV6I4xKeRHm0gqhMH7fwAiEkF9w0wJsODbomISbgbN+I+MTNV7fsZLS5kmjWGQ5sNUbAMEZ1u63xmP+9bIPU8VPsVdYY4BK7tMv8HPPtQfydJpLotm+g9sN3hirFYjXl/bqBmuUXM6XQiLIbVcykyzsXg5k4m15XeHZdwL8ohk2KaDOxDeZnV5OlrdKOzZDoU8olFmqgwEzQktT6e8ebYl5iSvUk61xaVS0jXuxxH3nS5p/Nv5jtOOAfOxb3mBlhhezp82Gy1PerqZQ=
-        file:
-        - releases/manifesto-darwin-amd64.tar.gz
-        - releases/manifesto-windows-amd64.tar.gz
-        - releases/manifesto-linux-amd64.tar.gz
-        skip_cleanup: true
-        on:
-          repo: aquasecurity/manifesto
-          tags: true
+  - script: make all
+    deploy:
+      provider: releases
+      api_key:
+        secure: QrixD87Gida5K3xaU1+lRDTxZZh3744GQD4XKlvoDOxxHC/buQBqGGL0MiDK7MU3s4Csvkmj+tH1sVMvrBwXBbT6q2zEmc+wv4LXF8svYMquvli8phEteifOYTSh4SSj6UiWAXQ/T5G/qr/rfZ/S2JdMMU9/ShSsvSyIimxryuW3tmQ0rZDlnmhL/mQKbNbJLmOBP8xtl8+i/gwRQwJNizxKH17XpoLNzPGrGu+BiZKIIlicVsqvPzKn7FLkh8g1qEGDHq4nnCUtHiyyei5XW+5+sIdRr5d9lydIvYM54B8upw/BDLbkpNzER9JNlF0MNg0WTk6xss8HHFYxvszlQ5i6QYMNTGL8rJz36oDo1oHSlVoS7hMSpgNvOYdMPjFwh3PXWzFaSLZNEhy7rqAqcynpuZW81qMNEQgmWkOJ+u9fLkUSR2Vkl+p6MogXAyqMw/qpJUPeDmgmLo55pnmUI/TaaweFcrI+80rptNIcglNcAuui7zP5bCOl8iFmfDnaenC5MX2RsVuFAP8kWii1bc/HHtr7myjm/P/hIRORP1Ota4L+2TlRmDP4n0EC22JCP81xX3Ph0eriOF/f6aiFV2aATRxroQxjeormIqlir/H17Xbbry8GSgR8W8sjLoXPI/v9LJKl/MlPtYQ5V6DTrgkee/r4gIhQindYyQTT8hU=
+      file:
+      - releases/manifesto-darwin-amd64.tar.gz
+      - releases/manifesto-windows-amd64.tar.gz
+      - releases/manifesto-linux-amd64.tar.gz
+      skip_cleanup: true
+      on:
+        repo: aquasecurity/manifesto
+        tags: true

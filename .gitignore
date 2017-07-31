@@ -1,2 +1,5 @@
 manifesto
+bin/
+vendor/
+releases/
 *.json
