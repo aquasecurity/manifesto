@@ -12,7 +12,7 @@ ifeq ($(OS),Windows_NT)
 	suffix := .exe
 endif
 
-all: test build
+all: build test
 
 $(GOPATH)/bin/glide$(suffix):
 	go get github.com/Masterminds/glide
