@@ -15,6 +15,7 @@ jobs:
         - releases/manifesto-darwin-amd64.tar.gz
         - releases/manifesto-windows-amd64.tar.gz
         - releases/manifesto-linux-amd64.tar.gz
+        skip_cleanup: true
         on:
           repo: aquasecurity/manifesto
           tags: true
