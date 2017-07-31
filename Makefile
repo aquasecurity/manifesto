@@ -12,7 +12,7 @@ ifeq ($(OS),Windows_NT)
 	suffix := .exe
 endif
 
-all: build
+all: test build
 
 $(GOPATH)/bin/glide$(suffix):
 	go get github.com/Masterminds/glide
@@ -41,6 +41,9 @@ bin/darwin/amd64:
 	mkdir -p bin/darwin/amd64
 
 build: darwin linux windows
+
+test:
+	go test -v $(shell go list ./... | grep -v /vendor/)
 
 darwin: vendor releases bin/darwin/amd64
 	env GOOS=darwin GOAARCH=amd64 go build -ldflags '$(LDFLAGS)' -v -o $(CURDIR)/bin/darwin/amd64/$(NAME)
