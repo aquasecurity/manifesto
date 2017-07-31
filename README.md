@@ -23,7 +23,9 @@ At the moment this is a Proof of Concept - feedback and ideas very welcome.
 * Clone this repo (or `go get github.com/aquasecurity/manifesto`)
 * Go to the directory and `go build .`
 
-You will also need to be logged in to manipulate data in the Docker Registry - do this with [`docker login`](https://docs.docker.com/engine/reference/commandline/login/)
+In this release you will need to be logged in to the Docker Registry - do this with [`docker login`](https://docs.docker.com/engine/reference/commandline/login/). This means that manifesto can execute docker commands directly. 
+
+In addition, since we are now using the Registry API directly to store and retrieve metadata in blobs, you need to pass in your username and password to manifesto itself. You can do this with the command line, environment variables REGISTRY\_USERNAME and REGISTRY\_PASSWORD, or by responding to prompts. 
 
 ## Usage
 
