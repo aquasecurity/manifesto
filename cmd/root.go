@@ -57,15 +57,15 @@ func Execute() {
 
 func ensureRegistryCredentials() {
 	if username == "" {
-		fmt.Printf("Username: ")
+		fmt.Fprintf(os.Stderr, "Username: ")
 		fmt.Scanf("%s", &username)
 	}
 	if password == "" {
-		fmt.Printf("Password: ")
+		fmt.Fprintf(os.Stderr, "Password: ")
 		pwd, err := terminal.ReadPassword(0)
-		fmt.Println()
+		fmt.Fprintf(os.Stderr, "\n")
 		if err != nil {
-			fmt.Printf("error reading password: %v", err)
+			fmt.Fprintf(os.Stderr, "error reading password: %v", err)
 			os.Exit(1)
 		}
 		password = string(pwd)
