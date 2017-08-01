@@ -20,9 +20,24 @@ At the moment this is a Proof of Concept - feedback and ideas very welcome.
 
 ## Installation
 
+We automatically build binary executables for Mac, Linux and Windows, or you can rebuild from source. Whichever approach you take, **you'll also need to set up credentials** - see below. 
+
+### Installing binaries
+Download the latest binary for your platform from the [releases tab](https://github.com/aquasecurity/manifesto/releases) and unzip it. 
+
+You may find it easiest to move the binary into your path once you have downloaded it. For example 
+
+```
+$ wget https://github.com/aquasecurity/manifesto/releases/download/<release tag>/manifesto-darwin-amd64.tar.gz
+$ tar xf manifesto-darwin-amd64.tar.gz
+$ cp bin/darwin/amd64/manifesto /us/local/bin
+```
+
+### Building from source
 * Clone this repo (or `go get github.com/aquasecurity/manifesto`)
 * Go to the directory and `go build .`
 
+### Set up credentials
 In this release you will need to be logged in to the Docker Registry - do this with [`docker login`](https://docs.docker.com/engine/reference/commandline/login/). This means that manifesto can execute docker commands directly. 
 
 In addition, since we are now using the Registry API directly to store and retrieve metadata in blobs, you need to pass in your username and password to manifesto itself. You can do this with the command line, environment variables REGISTRY\_USERNAME and REGISTRY\_PASSWORD, or by responding to prompts. 
