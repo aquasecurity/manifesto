@@ -52,7 +52,7 @@ func TestNew(t *testing.T) {
 		t.Fatalf("Failed to create registry: %v", err)
 	}
 
-	if r.URL != "example.com" {
+	if r.URL != "https://example.com" {
 		t.Fatalf("Unexpected registry URL %s", r.URL)
 	}
 

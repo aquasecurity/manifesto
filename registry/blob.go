@@ -37,9 +37,10 @@ func computeDigest(data []byte) string {
 func (r *V2) UploadBlob(repoName string, data io.Reader) (string, error) {
 
 	// Post to get the location / UUID for this upload
-	res, err := r.call("POST", "/v2/"+repoName+"/blobs/uploads/", []byte{}, "")
+	URL := "/v2/" + repoName + "/blobs/uploads/"
+	res, err := r.call("POST", URL, []byte{}, "")
 	if err != nil {
-		return "", fmt.Errorf("post to blobs/upload failed: %v", err)
+		return "", fmt.Errorf("post to %s failed: %v", URL, err)
 	}
 
 	// We don't need the body at all so discard and close it now
@@ -47,7 +48,7 @@ func (r *V2) UploadBlob(repoName string, data io.Reader) (string, error) {
 	res.Body.Close()
 
 	if res.StatusCode != http.StatusAccepted {
-		return "", fmt.Errorf("post to blobs/upload not accepted: %s", res.Status)
+		return "", fmt.Errorf("post to %s not accepted: %s", URL, res.Status)
 	}
 
 	// The post gives us the location for the blob upload

@@ -26,7 +26,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const dockerHub = "https://registry-1.docker.io"
+const dockerHub = "registry-1.docker.io"
 
 type Stream struct {
 	Stream string `json:"stream"`
@@ -101,6 +101,8 @@ var putCmd = &cobra.Command{
 	Short: "Put metadata for the container image",
 	Long:  `Store datafile as metadata associated with the image`,
 	Run: func(cmd *cobra.Command, args []string) {
+		var err error
+
 		if len(args) < 3 {
 			cmd.Help()
 			return
@@ -110,16 +112,18 @@ var putCmd = &cobra.Command{
 		metadataName := args[1]
 		datafile := args[2]
 
-		repoName, imageName, _ := repoAndTaggedNames(name)
+		registryName, repoName, imageName, repoNameNoHost, _, imageDigest := getNameComponents(name)
 		metadataImageName := imageNameForManifest(repoName)
 
 		fmt.Printf("Storing metadata '%s' for image '%s'\n", metadataName, imageName)
 
 		// Get the digest for this image
-		imageDigest, err := dockerGetDigest(imageName)
-		if err != nil {
-			fmt.Printf("Image '%s' not found\n", imageName)
-			os.Exit(1)
+		if imageDigest == "" {
+			imageDigest, err = dockerGetDigest(imageName)
+			if err != nil {
+				fmt.Printf("Image '%s' not found\n", imageName)
+				os.Exit(1)
+			}
 		}
 
 		log.Debugf("Image has digest %s", imageDigest)
@@ -128,7 +132,7 @@ var putCmd = &cobra.Command{
 
 		// We'll need the registry API from here on
 		ensureRegistryCredentials()
-		r, err := registry.New(dockerHub, username, password)
+		r, err := registry.New(registryName, username, password)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error connecting to registry: %v\n", err)
 			os.Exit(1)
@@ -139,7 +143,7 @@ var putCmd = &cobra.Command{
 			fmt.Fprintf(os.Stderr, "Error opening file %s: %v\n", datafile, err)
 		}
 
-		digest, err := r.UploadBlob(repoName, f)
+		digest, err := r.UploadBlob(repoNameNoHost, f)
 		if err != nil {
 			fmt.Printf("Error uploading metadata to registry: %v\n", err)
 			os.Exit(1)
