@@ -28,20 +28,23 @@ var listCmd = &cobra.Command{
 	Short: "List currently stored metadata for the container image",
 	Long:  `Display a list of the metadata stored for the specified container image.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		var err error
 		if len(args) < 1 {
 			cmd.Help()
 			return
 		}
 
 		name := args[0]
-		repoName, imageName, _ := repoAndTaggedNames(name)
+		_, repoName, imageName, _, _, imageDigest := getNameComponents(name)
 		metadataImageName := imageNameForManifest(repoName)
 
 		// Get the digest for the image
-		imageDigest, err := dockerGetDigest(imageName)
-		if err != nil {
-			fmt.Printf("Image '%s' not found\n", imageName)
-			os.Exit(1)
+		if imageDigest == "" {
+			imageDigest, err = dockerGetDigest(imageName)
+			if err != nil {
+				fmt.Printf("Image '%s' not found\n", imageName)
+				os.Exit(1)
+			}
 		}
 
 		log.Debugf("Image has digest %s", imageDigest)

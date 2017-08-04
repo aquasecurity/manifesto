@@ -93,15 +93,43 @@ func imageNameForManifest(imageName string) string {
 	return imageName + ":_manifesto"
 }
 
-func repoAndTaggedNames(name string) (repoName string, imageName string, tagName string) {
-	nameSlice := strings.Split(name, ":")
-	repoName = nameSlice[0]
+// registryName - dockerHub if omitted
+// repoName - hostname/org/repo - hostname is omitted if it's dockerHub
+// imageName - hostname/org/repo:tag - latest is used for the tag if not specified; hostname omitted if it's dockerHub
+// repoNameNoHost - org/repo - hostname always omitted
+func getNameComponents(name string) (registryName string, repoName string, imageName string, repoNameNoHost string, tagName string, digestName string) {
+
+	// reference := name [ ":" tag ] [ "@" digest ]
+	nameSlice := strings.Split(name, "@")
+	if len(nameSlice) > 1 {
+		digestName = nameSlice[1]
+		name = nameSlice[0]
+	}
+
+	// name := [ hostname "/" ] component [ "/" component ]*
+	// name can include : as part of the host name, so we look for hostname and components before
+	// looking for the tag
+	nameSlice = strings.Split(name, "/")
+	registryName = dockerHub
+	if len(nameSlice) > 2 {
+		name = strings.Join(nameSlice[1:], "/")
+		registryName = nameSlice[0]
+
+		// Include registry name in repo name if it's not Docker Hub
+		repoName = registryName + "/"
+	}
+
+	// Now look for a tag
+	nameSlice = strings.Split(name, ":")
+	repoName += nameSlice[0]
+	repoNameNoHost = nameSlice[0]
 	tagName = "latest"
 	if len(nameSlice) > 1 {
 		tagName = nameSlice[1]
 	}
+
 	imageName = repoName + ":" + tagName
-	return repoName, imageName, tagName
+	return registryName, repoName, imageName, repoNameNoHost, tagName, digestName
 }
 
 // getCmd gets manifesto data
@@ -110,6 +138,8 @@ var getCmd = &cobra.Command{
 	Short: "Show metadata for the container image",
 	Long:  `Display metadata information about the container image.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		var err error
+
 		if len(args) < 2 {
 			cmd.Help()
 			return
@@ -118,14 +148,16 @@ var getCmd = &cobra.Command{
 		name := args[0]
 		metadata := args[1]
 
-		repoName, imageName, _ := repoAndTaggedNames(name)
+		registryURL, repoName, imageName, repoNameNoHost, _, imageDigest := getNameComponents(name)
 		metadataImageName := imageNameForManifest(repoName)
 
 		// Get the digest for the image
-		imageDigest, err := dockerGetDigest(imageName)
-		if err != nil {
-			fmt.Printf("Image '%s' not found\n", imageName)
-			os.Exit(1)
+		if imageDigest == "" {
+			imageDigest, err = dockerGetDigest(imageName)
+			if err != nil {
+				fmt.Printf("Image '%s' not found\n", imageName)
+				os.Exit(1)
+			}
 		}
 
 		log.Debugf("Image has digest %s", imageDigest)
@@ -142,7 +174,7 @@ var getCmd = &cobra.Command{
 
 		// We'll need the registry API from here on
 		ensureRegistryCredentials()
-		r, err := registry.New(dockerHub, username, password)
+		r, err := registry.New(registryURL, username, password)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error connecting to registry: %v\n", err)
 			os.Exit(1)
@@ -155,7 +187,7 @@ var getCmd = &cobra.Command{
 				for _, m := range v.MetadataManifesto {
 					if m.Type == metadata {
 						log.Debugf("'%s' metadata identified", metadata)
-						contents, err := r.GetBlob(repoName, m.Digest)
+						contents, err := r.GetBlob(repoNameNoHost, m.Digest)
 						if err != nil {
 							// Maybe this metadata was stored as an image by a previous version of manifesto
 							// so try getting it that way

@@ -72,6 +72,10 @@ func New(URL, username, password string) (*V2, error) {
 		return nil, errors.New("The registry URL must be provided")
 	}
 
+	if !strings.HasPrefix(URL, "http") {
+		URL = "https://" + URL
+	}
+
 	r := &V2{
 		URL: URL,
 		Client: &http.Client{
