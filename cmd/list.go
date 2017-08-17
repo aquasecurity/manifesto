@@ -42,7 +42,7 @@ var listCmd = &cobra.Command{
 		if imageDigest == "" {
 			imageDigest, err = dockerGetDigest(imageName)
 			if err != nil {
-				fmt.Printf("Image '%s' not found\n", imageName)
+				fmt.Printf("Image '%s' not found: %v\n", imageName, err)
 				os.Exit(1)
 			}
 		}
@@ -53,6 +53,7 @@ var listCmd = &cobra.Command{
 		raw, err := dockerGetData(metadataImageName)
 		if err != nil {
 			fmt.Printf("No manifesto data stored for image '%s'\n", imageName)
+			log.Debugf("%v", err)
 			os.Exit(1)
 		}
 		var mml MetadataManifestoList

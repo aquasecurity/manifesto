@@ -121,7 +121,7 @@ var putCmd = &cobra.Command{
 		if imageDigest == "" {
 			imageDigest, err = dockerGetDigest(imageName)
 			if err != nil {
-				fmt.Printf("Image '%s' not found\n", imageName)
+				fmt.Printf("Image '%s' not found: %v\n", imageName, err)
 				os.Exit(1)
 			}
 		}

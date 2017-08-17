@@ -192,7 +192,7 @@ var getCmd = &cobra.Command{
 							// Maybe this metadata was stored as an image by a previous version of manifesto
 							// so try getting it that way
 							// TODO!! Retire this one day
-							log.Debug("This metadata is stored in an image rather than a blob")
+							log.Debugf("This metadata may be stored in an image rather than a blob: %v", err)
 							contents, err = dockerGetData(repoName + "@" + m.Digest)
 							if err != nil {
 								fmt.Printf("Couldn't find %s data from manifesto: %v\n", metadata, err)
