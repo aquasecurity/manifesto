@@ -9,7 +9,13 @@ func TestParseWWWAuth(t *testing.T) {
 		realm   string
 		scope   string
 		service string
-	}{}
+	}{
+		{input: "Basic realm=\"secure\"", scheme: "Basic", realm: "secure"},
+		{input: "Bearer realm=\"https://auth.docker.io/token\",service=\"registry.docker.io\",scope=\"repository:library/mongo:pull\"",
+			scheme: "Bearer", realm: "https://auth.docker.io/token", service: "registry.docker.io", scope: "repository:library/mongo:pull"},
+		{input: "Bearer realm=\"https://auth.docker.io/token\",service=\"registry.docker.io\",scope=\"repository:library/mongo:push,pull\"",
+			scheme: "Bearer", realm: "https://auth.docker.io/token", service: "registry.docker.io", scope: "repository:library/mongo:push,pull"},
+	}
 
 	for _, tc := range testcases {
 		t.Run(tc.input, func(t *testing.T) {
