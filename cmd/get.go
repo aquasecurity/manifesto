@@ -74,9 +74,9 @@ func dockerGetDigest(imageName string) (digest string, err error) {
 	// Make sure we have an up-to-date version of this image
 	execCommand("docker", "pull", imageName)
 	ex := exec.Command("docker", "inspect", imageName, "-f", "{{.RepoDigests}}")
-	digestOut, err := ex.Output()
+	digestOut, err := ex.CombinedOutput()
 	if err != nil {
-		return "", fmt.Errorf("error reading inspect output: %v", err)
+		return "", fmt.Errorf("error reading inspect output: %v: %s", err, string(digestOut))
 	}
 
 	hh := strings.Split(string(digestOut), "@")
