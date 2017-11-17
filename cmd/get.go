@@ -173,7 +173,6 @@ var getCmd = &cobra.Command{
 		log.Debug("Repo metadata index retrieved")
 
 		// We'll need the registry API from here on
-		ensureRegistryCredentials()
 		r, err := registry.New(registryURL, username, password)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error connecting to registry: %v\n", err)

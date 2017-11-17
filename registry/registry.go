@@ -22,9 +22,12 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"os"
 	"regexp"
 	"strings"
 	"time"
+
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 // AuthType is a simple int type used for enumerations of the authentication
@@ -74,6 +77,21 @@ func New(URL, username, password string) (*V2, error) {
 
 	if !strings.HasPrefix(URL, "http") {
 		URL = "https://" + URL
+	}
+
+	// If we don't already have a username and password, prompt for them
+	if username == "" {
+		fmt.Fprintf(os.Stderr, "Username: ")
+		fmt.Scanf("%s", &username)
+	}
+	if password == "" {
+		fmt.Fprintf(os.Stderr, "Password: ")
+		pwd, err := terminal.ReadPassword(0)
+		fmt.Fprintf(os.Stderr, "\n")
+		if err != nil {
+			return nil, fmt.Errorf("error reading password: %v", err)
+		}
+		password = string(pwd)
 	}
 
 	r := &V2{

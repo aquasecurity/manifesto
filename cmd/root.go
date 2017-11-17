@@ -19,8 +19,6 @@ import (
 	"os"
 	"os/exec"
 
-	"golang.org/x/crypto/ssh/terminal"
-
 	"github.com/op/go-logging"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -52,23 +50,6 @@ func Execute() {
 	if err := RootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(-1)
-	}
-}
-
-func ensureRegistryCredentials() {
-	if username == "" {
-		fmt.Fprintf(os.Stderr, "Username: ")
-		fmt.Scanf("%s", &username)
-	}
-	if password == "" {
-		fmt.Fprintf(os.Stderr, "Password: ")
-		pwd, err := terminal.ReadPassword(0)
-		fmt.Fprintf(os.Stderr, "\n")
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "error reading password: %v", err)
-			os.Exit(1)
-		}
-		password = string(pwd)
 	}
 }
 

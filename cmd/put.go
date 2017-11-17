@@ -131,7 +131,6 @@ var putCmd = &cobra.Command{
 		// Store the piece of metadata we've been given
 
 		// We'll need the registry API from here on
-		ensureRegistryCredentials()
 		r, err := registry.New(registryName, username, password)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error connecting to registry: %v\n", err)
