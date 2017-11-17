@@ -30,6 +30,10 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 )
 
+const dockerHub = "registry-1.docker.io"
+const tempFileName = "_manifesto.out"
+const tempContainerName = "manifesto.temp"
+
 // AuthType is a simple int type used for enumerations of the authentication
 // types supported by version 2 registries
 type AuthType int
@@ -61,6 +65,25 @@ type V2 struct {
 type AuthChallenge struct {
 	Scheme, Realm string
 	Params        map[string]string
+}
+
+// MetadataManifesto gives the type of a piece of arbitrary manifesto data, and the digest where it can be found
+// A given image can only have one current piece of data of each type.
+// Example types might include: "seccomp", "approvals", "contact"
+type MetadataManifesto struct {
+	Type   string `json:"type"`
+	Digest string `json:"digest"`
+}
+
+// ImageMetadataManifesto associates a piece of manifesto data with a particular image
+type ImageMetadataManifesto struct {
+	ImageDigest       string              `json:"image_digest"`
+	MetadataManifesto []MetadataManifesto `json:"manifesto"`
+}
+
+// MetadataManifestoList holds all the metadata for a given image repository
+type MetadataManifestoList struct {
+	Images []ImageMetadataManifesto `json:"images"`
 }
 
 // New creates a new instance of the V2 structure for the registry located

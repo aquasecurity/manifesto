@@ -16,19 +16,29 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 	"os"
-	"os/exec"
+
+	"github.com/aquasecurity/manifesto/registry"
 
 	"github.com/op/go-logging"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
+type metadataStorage interface {
+	GetMetadata(image string, metadata string) ([]byte, string, error)
+	ListMetadata(image string) ([]string, string, error)
+	PutMetadata(image string, metadata string, data io.Reader) (string, error)
+}
+
 var (
-	username string
-	password string
-	verbose  bool
-	log      = logging.MustGetLogger("")
+	username       string
+	password       string
+	storage        string
+	verbose        bool
+	storageBackend metadataStorage
+	log            = logging.MustGetLogger("")
 )
 
 // RootCmd represents the base command when called without any subcommands
@@ -53,16 +63,6 @@ func Execute() {
 	}
 }
 
-func execCommand(name string, arg ...string) error {
-	ex := exec.Command(name, arg...)
-	ex.Stdin = os.Stdin
-	if verbose {
-		ex.Stderr = os.Stderr
-		ex.Stdout = os.Stdout
-	}
-	return ex.Run()
-}
-
 func init() {
 	cobra.OnInitialize(initConfig)
 
@@ -74,8 +74,14 @@ func init() {
 	RootCmd.PersistentFlags().StringVarP(&password, "password", "p", "", "Registry password (can also be passed in with the env var REGISTRY_PASSWORD)")
 	RootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Send debug output to stderr")
 
+	RootCmd.PersistentFlags().StringVarP(&storage, "storage", "s", "", "Storage type to use")
+
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
+
+	RootCmd.AddCommand(getCmd)
+	RootCmd.AddCommand(listCmd)
+	RootCmd.AddCommand(putCmd)
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -86,12 +92,14 @@ func initConfig() {
 
 	viper.BindEnv("username", "REGISTRY_USERNAME")
 	viper.BindEnv("password", "REGISTRY_PASSWORD")
+	viper.BindEnv("storage", "MANIFESTO_STORAGE")
 	viper.BindEnv("verbose", "MANIFESTO_VERBOSE")
 
 	viper.AutomaticEnv() // read in environment variables that match
 
 	viper.BindPFlag("username", RootCmd.Flags().Lookup("username"))
 	viper.BindPFlag("password", RootCmd.Flags().Lookup("password"))
+	viper.BindPFlag("storage", RootCmd.Flags().Lookup("storage"))
 	viper.BindPFlag("verbose", RootCmd.Flags().Lookup("verbose"))
 
 	// If a config file is found, read it in.
@@ -103,10 +111,19 @@ func initConfig() {
 	password = viper.GetString("password")
 	verbose = viper.GetBool("verbose")
 
+	storage = viper.GetString("storage")
+
 	// Set up logging
 	if verbose {
 		logging.SetLevel(logging.DEBUG, "")
 	} else {
 		logging.SetLevel(logging.INFO, "")
+	}
+
+	// Backend storage type
+	switch storage {
+	default:
+		log.Debug("Registry storage")
+		storageBackend = registry.NewStorage(username, password, verbose)
 	}
 }
