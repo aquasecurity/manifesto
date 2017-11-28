@@ -12,7 +12,8 @@ import (
 	"github.com/labstack/gommon/log"
 )
 
-type RegistryStorage struct {
+// Storage is a backend for storing metadata that uses the Registry V2 API
+type Storage struct {
 	username string
 	password string
 	verbose  bool
@@ -20,8 +21,8 @@ type RegistryStorage struct {
 }
 
 // NewStorage returns a metadata storage backend using a Registry
-func NewStorage(username, password string, verbose bool) *RegistryStorage {
-	return &RegistryStorage{
+func NewStorage(username, password string, verbose bool) *Storage {
+	return &Storage{
 		username: username,
 		password: password,
 		verbose:  verbose,
@@ -29,7 +30,7 @@ func NewStorage(username, password string, verbose bool) *RegistryStorage {
 }
 
 // GetMetadata returns the data stored for this image with this metadata type
-func (s *RegistryStorage) GetMetadata(name string, metadata string) (data []byte, imageName string, err error) {
+func (s *Storage) GetMetadata(name string, metadata string) (data []byte, imageName string, err error) {
 	registryURL, repoName, imageName, repoNameNoHost, _, imageDigest := getNameComponents(name)
 	metadataImageName := imageNameForManifest(repoName)
 
@@ -90,7 +91,7 @@ func (s *RegistryStorage) GetMetadata(name string, metadata string) (data []byte
 }
 
 // ListMetadata lists the types of metadata currently stored for this image
-func (s *RegistryStorage) ListMetadata(image string) (metadataTypes []string, imageName string, err error) {
+func (s *Storage) ListMetadata(image string) (metadataTypes []string, imageName string, err error) {
 	_, repoName, imageName, _, _, imageDigest := getNameComponents(image)
 
 	metadataImageName := imageNameForManifest(repoName)
@@ -131,7 +132,7 @@ func (s *RegistryStorage) ListMetadata(image string) (metadataTypes []string, im
 }
 
 // PutMetadata stores metadata under a type for an image
-func (s *RegistryStorage) PutMetadata(image string, metadata string, f io.Reader) (imageName string, err error) {
+func (s *Storage) PutMetadata(image string, metadata string, f io.Reader) (imageName string, err error) {
 	registryURL, repoName, imageName, repoNameNoHost, _, imageDigest := getNameComponents(image)
 	metadataImageName := imageNameForManifest(repoName)
 
@@ -230,7 +231,7 @@ func (s *RegistryStorage) PutMetadata(image string, metadata string, f io.Reader
 	return
 }
 
-func (s *RegistryStorage) dockerGetDigest(imageName string) (digest string, err error) {
+func (s *Storage) dockerGetDigest(imageName string) (digest string, err error) {
 	// Make sure we have an up-to-date version of this image
 	s.execCommand("docker", "pull", imageName)
 	ex := exec.Command("docker", "inspect", imageName, "-f", "{{.RepoDigests}}")
@@ -249,7 +250,7 @@ func (s *RegistryStorage) dockerGetDigest(imageName string) (digest string, err 
 	return digest, nil
 }
 
-func (s *RegistryStorage) dockerGetData(imageName string) ([]byte, error) {
+func (s *Storage) dockerGetData(imageName string) ([]byte, error) {
 	err := s.execCommand("docker", "pull", imageName)
 	if err != nil {
 		return []byte{}, err
@@ -272,7 +273,7 @@ func (s *RegistryStorage) dockerGetData(imageName string) ([]byte, error) {
 
 // imageName is the name we'll store this data under, including the tag e.g. myorg/myrepo:mytag or myorg/myrepo@sha256:12345...
 // datafile is the name of the file we get the data from
-func (s *RegistryStorage) dockerPutData(imageName string, metadataName string, datafile string) (string, error) {
+func (s *Storage) dockerPutData(imageName string, metadataName string, datafile string) (string, error) {
 	// Copy file locally so that it's going to be in the build context
 	metadata, err := os.Open(datafile)
 	if err != nil {
@@ -325,7 +326,7 @@ func (s *RegistryStorage) dockerPutData(imageName string, metadataName string, d
 	return digest, nil
 }
 
-func (s *RegistryStorage) execCommand(name string, arg ...string) error {
+func (s *Storage) execCommand(name string, arg ...string) error {
 	ex := exec.Command(name, arg...)
 	ex.Stdin = os.Stdin
 	ex.Stderr = os.Stderr
