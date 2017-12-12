@@ -3,3 +3,4 @@ bin/
 vendor/
 releases/
 *.json
+examples/k8s_contacts/k8s_contacts
