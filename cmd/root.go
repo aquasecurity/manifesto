@@ -16,7 +16,6 @@ package cmd
 
 import (
 	"fmt"
-	"io"
 	"os"
 
 	"github.com/aquasecurity/manifesto/registry"
