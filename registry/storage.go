@@ -132,7 +132,12 @@ func (s *Storage) ListMetadata(image string) (metadataTypes []string, imageName 
 }
 
 // PutMetadata stores metadata under a type for an image
-func (s *Storage) PutMetadata(image string, metadata string, f io.Reader) (imageName string, err error) {
+func (s *Storage) PutMetadata(image string, metadata string, datafile string) (imageName string, err error) {
+	f, err := os.Open(datafile)
+	if err != nil {
+		return "", fmt.Errorf("error opening file %s: %v", datafile, err)
+	}
+
 	registryURL, repoName, imageName, repoNameNoHost, _, imageDigest := getNameComponents(image)
 	metadataImageName := imageNameForManifest(repoName)
 

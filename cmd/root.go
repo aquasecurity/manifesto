@@ -29,7 +29,7 @@ import (
 type metadataStorage interface {
 	GetMetadata(image string, metadata string) ([]byte, string, error)
 	ListMetadata(image string) ([]string, string, error)
-	PutMetadata(image string, metadata string, data io.Reader) (string, error)
+	PutMetadata(image string, metadata string, data string) (string, error)
 }
 
 var (
@@ -48,10 +48,6 @@ var RootCmd = &cobra.Command{
 	Long: `Store, retrieve and list pieces of metadata alongside your container images in the registry. 
 Metadata is associated with specific images (by hash).
 	`,
-
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	//	Run: func(cmd *cobra.Command, args []string) { },
 }
 
 // Execute adds all child commands to the root command sets flags appropriately.
