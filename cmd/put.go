@@ -42,13 +42,7 @@ var putCmd = &cobra.Command{
 		metadataName := args[1]
 		datafile := args[2]
 
-		f, err := os.Open(datafile)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error opening file %s: %v\n", datafile, err)
-			os.Exit(1)
-		}
-
-		imageName, err := storageBackend.PutMetadata(name, metadataName, f)
+		imageName, err := storageBackend.PutMetadata(name, metadataName, datafile)
 		if err != nil {
 			fmt.Printf("Error putting metadata for image %s: %v\n", imageName, err)
 			os.Exit(1)
