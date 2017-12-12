@@ -27,9 +27,12 @@ type Stream struct {
 
 // putCmd stores manifesto data for this image
 var putCmd = &cobra.Command{
-	Use:   "put [IMAGE] [metadata] [datafile]",
+	Use:   "put [IMAGE] [metadata] [data]",
 	Short: "Put metadata for the container image",
-	Long:  `Store datafile as metadata associated with the image`,
+	Long: `Store data as metadata associated with the image. 
+	For Grafeas proof-of-concept support
+	 - the data field is a directory, containing a notes and occurrences directory, each containing JSON files
+	 - the only supported metadata type is PACKAGE_VULNERABILITY`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var err error
 

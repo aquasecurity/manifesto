@@ -16,9 +16,9 @@ package cmd
 
 import (
 	"fmt"
-	"io"
 	"os"
 
+	"github.com/aquasecurity/manifesto/grafeas"
 	"github.com/aquasecurity/manifesto/registry"
 
 	"github.com/op/go-logging"
@@ -37,6 +37,8 @@ var (
 	password       string
 	storage        string
 	verbose        bool
+	grafeasURL     string
+	grafeasProjID  string
 	storageBackend metadataStorage
 	log            = logging.MustGetLogger("")
 )
@@ -45,9 +47,11 @@ var (
 var RootCmd = &cobra.Command{
 	Use:   "manifesto",
 	Short: "Manage metadata associated with your container images",
-	Long: `Store, retrieve and list pieces of metadata alongside your container images in the registry. 
-Metadata is associated with specific images (by hash).
-	`,
+	Long: `Store, retrieve and list pieces of metadata about your container images.
+Storage options: 
+- store in the container registry alongside your images 
+- use the Grafeas API
+This tool is currently a proof-of-concept so please expect changes.`,
 }
 
 // Execute adds all child commands to the root command sets flags appropriately.
@@ -70,7 +74,10 @@ func init() {
 	RootCmd.PersistentFlags().StringVarP(&password, "password", "p", "", "Registry password (can also be passed in with the env var REGISTRY_PASSWORD)")
 	RootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Send debug output to stderr")
 
-	RootCmd.PersistentFlags().StringVarP(&storage, "storage", "s", "", "Storage type to use")
+	RootCmd.PersistentFlags().StringVarP(&storage, "storage", "s", "", "Storage type to use (default is 'registry', also supported: 'grafeas'")
+
+	RootCmd.PersistentFlags().StringVarP(&grafeasURL, "grafeas_url", "", "http://grafeas:8080", "URL of Grafeas server (only used if storage type is grafeas)")
+	RootCmd.PersistentFlags().StringVarP(&grafeasProjID, "grafeas_proj_id", "", "", "Grafeas project ID (only used if storage type is grafeas). This would typically be a customer project name.")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
@@ -90,6 +97,8 @@ func initConfig() {
 	viper.BindEnv("password", "REGISTRY_PASSWORD")
 	viper.BindEnv("storage", "MANIFESTO_STORAGE")
 	viper.BindEnv("verbose", "MANIFESTO_VERBOSE")
+	viper.BindEnv("grafeas_url", "GRAFEAS_URL")
+	viper.BindEnv("grafeas_proj_id", "GRAFEAS_PROJ_ID")
 
 	viper.AutomaticEnv() // read in environment variables that match
 
@@ -97,6 +106,8 @@ func initConfig() {
 	viper.BindPFlag("password", RootCmd.Flags().Lookup("password"))
 	viper.BindPFlag("storage", RootCmd.Flags().Lookup("storage"))
 	viper.BindPFlag("verbose", RootCmd.Flags().Lookup("verbose"))
+	viper.BindPFlag("grafeas_url", RootCmd.Flags().Lookup("grafeas_url"))
+	viper.BindPFlag("grafeas_proj_id", RootCmd.Flags().Lookup("grafeas_proj_id"))
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
@@ -108,6 +119,8 @@ func initConfig() {
 	verbose = viper.GetBool("verbose")
 
 	storage = viper.GetString("storage")
+	grafeasURL = viper.GetString("grafeas_url")
+	grafeasProjID = viper.GetString("grafeas_proj_id")
 
 	// Set up logging
 	if verbose {
@@ -118,6 +131,12 @@ func initConfig() {
 
 	// Backend storage type
 	switch storage {
+	case "grafeas":
+		if grafeasProjID == "" {
+			fmt.Println("You need to specify a Grafeas project ID")
+			os.Exit(1)
+		}
+		storageBackend = grafeas.NewStorage(grafeasURL, grafeasProjID, verbose)
 	default:
 		log.Debug("Registry storage")
 		storageBackend = registry.NewStorage(username, password, verbose)
