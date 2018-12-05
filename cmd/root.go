@@ -20,7 +20,6 @@ import (
 
 	"github.com/aquasecurity/manifesto/grafeas"
 	"github.com/aquasecurity/manifesto/registry"
-
 	"github.com/op/go-logging"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

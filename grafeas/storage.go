@@ -25,10 +25,11 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"unsafe"
 
 	"golang.org/x/oauth2/google"
 
-	grafeas "github.com/Grafeas/client-go/v1alpha1"
+	v1alpha1 "github.com/Grafeas/client-go/v1alpha1"
 	"github.com/op/go-logging"
 )
 
@@ -119,7 +120,7 @@ func urlForImage(image string) (string, error) {
 // Only PACKAGE_VULNERABILITY is currently supported for Grafeas backend
 func (s *Storage) GetMetadata(image string, metadata string) ([]byte, string, error) {
 	var data []byte
-	var occurrences []grafeas.Occurrence
+	var occurrences []v1alpha1.ApiOccurrence
 
 	if metadata != "PACKAGE_VULNERABILITY" {
 		return nil, image, fmt.Errorf("metadata type must be PACKAGE_VULNERABILITY for Grafeas")
@@ -141,7 +142,7 @@ func (s *Storage) GetMetadata(image string, metadata string) ([]byte, string, er
 	for _, occurrence := range occurrenceRsp.Occurrences {
 		log.Debugf("Occurrence for %s", occurrence.ResourceUrl)
 		log.Debugf("  kind: %#v", occurrence.Kind)
-		if occurrence.Kind == metadata {
+		if occurrence.Kind == (*v1alpha1.ApiNoteKind)(unsafe.Pointer(&metadata)) {
 			occurrences = append(occurrences, occurrence)
 		}
 	}
@@ -171,8 +172,9 @@ func (s *Storage) ListMetadata(image string) ([]string, string, error) {
 	}
 
 	for _, occurrence := range occurrenceRsp.Occurrences {
-		if _, ok := metadataTypes[occurrence.Kind]; !ok {
-			metadataTypes[occurrence.Kind] = struct{}{}
+		kind := string(*occurrence.Kind)
+		if _, ok := metadataTypes[kind]; !ok {
+			metadataTypes[kind] = struct{}{}
 		}
 	}
 
