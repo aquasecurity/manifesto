@@ -25,10 +25,10 @@ import (
 	"net/url"
 	"strconv"
 
-	grafeas "github.com/Grafeas/client-go/v1alpha1"
+	v1alpha1 "github.com/Grafeas/client-go/v1alpha1"
 )
 
-func (s *Storage) createNote(projectsID string, noteID string, note grafeas.Note) (*grafeas.Note, error) {
+func (s *Storage) createNote(projectsID string, noteID string, note v1alpha1.ApiNote) (*v1alpha1.ApiNote, error) {
 	n, err := json.Marshal(note)
 	if err != nil {
 		return nil, fmt.Errorf("marshalling note: %v", err)
@@ -37,7 +37,7 @@ func (s *Storage) createNote(projectsID string, noteID string, note grafeas.Note
 	return s.createNoteFromBytes(projectsID, noteID, n)
 }
 
-func (s *Storage) createNoteFromBytes(projectsID string, noteID string, n []byte) (*grafeas.Note, error) {
+func (s *Storage) createNoteFromBytes(projectsID string, noteID string, n []byte) (*v1alpha1.ApiNote, error) {
 	path := s.url + "/v1alpha1/projects/" + projectsID + "/notes"
 
 	queryParams := url.Values{}
@@ -51,7 +51,7 @@ func (s *Storage) createNoteFromBytes(projectsID string, noteID string, n []byte
 		return nil, err
 	}
 
-	var successPayload = new(grafeas.Note)
+	var successPayload = new(v1alpha1.ApiNote)
 	rsp, err := s.client.Do(req)
 	if err != nil {
 		return successPayload, err
@@ -71,7 +71,7 @@ func (s *Storage) createNoteFromBytes(projectsID string, noteID string, n []byte
 	return successPayload, err
 }
 
-func (s *Storage) createOccurrence(projectsID string, occurrence grafeas.Occurrence) (*grafeas.Occurrence, error) {
+func (s *Storage) createOccurrence(projectsID string, occurrence v1alpha1.ApiOccurrence) (*v1alpha1.ApiOccurrence, error) {
 	o, err := json.Marshal(occurrence)
 	if err != nil {
 		return nil, fmt.Errorf("marshalling occurrence: %v", err)
@@ -80,7 +80,7 @@ func (s *Storage) createOccurrence(projectsID string, occurrence grafeas.Occurre
 	return s.createOccurrenceFromBytes(projectsID, o)
 }
 
-func (s *Storage) createOccurrenceFromBytes(projectsID string, o []byte) (*grafeas.Occurrence, error) {
+func (s *Storage) createOccurrenceFromBytes(projectsID string, o []byte) (*v1alpha1.ApiOccurrence, error) {
 	path := s.url + "/v1alpha1/projects/" + projectsID + "/occurrences"
 
 	log.Debugf("CreateOccurrence at URL %s", path)
@@ -90,7 +90,7 @@ func (s *Storage) createOccurrenceFromBytes(projectsID string, o []byte) (*grafe
 		return nil, err
 	}
 
-	var successPayload = new(grafeas.Occurrence)
+	var successPayload = new(v1alpha1.ApiOccurrence)
 	rsp, err := s.client.Do(req)
 	if err != nil {
 		return successPayload, err
@@ -110,7 +110,7 @@ func (s *Storage) createOccurrenceFromBytes(projectsID string, o []byte) (*grafe
 	return successPayload, err
 }
 
-func (s *Storage) listOccurrences(projectsID string, filter string, pageSize int32, pageToken string) (*grafeas.ListOccurrencesResponse, error) {
+func (s *Storage) listOccurrences(projectsID string, filter string, pageSize int32, pageToken string) (*v1alpha1.ApiListOccurrencesResponse, error) {
 	path := s.url + "/v1alpha1/projects/" + projectsID + "/occurrences"
 
 	queryParams := url.Values{}
@@ -134,7 +134,7 @@ func (s *Storage) listOccurrences(projectsID string, filter string, pageSize int
 		return nil, err
 	}
 
-	var successPayload = new(grafeas.ListOccurrencesResponse)
+	var successPayload = new(v1alpha1.ApiListOccurrencesResponse)
 	rsp, err := s.client.Do(req)
 	if err != nil {
 		return successPayload, err
@@ -154,7 +154,7 @@ func (s *Storage) listOccurrences(projectsID string, filter string, pageSize int
 	return successPayload, err
 }
 
-func (s *Storage) getNote(projectsID string, notesID string) (*grafeas.Note, error) {
+func (s *Storage) getNote(projectsID string, notesID string) (*v1alpha1.ApiNote, error) {
 	path := s.url + "/v1alpha1/projects/" + projectsID + "/notes/" + notesID
 
 	log.Debugf("GetNote from URL %s", path)
@@ -164,7 +164,7 @@ func (s *Storage) getNote(projectsID string, notesID string) (*grafeas.Note, err
 		return nil, err
 	}
 
-	var successPayload = new(grafeas.Note)
+	var successPayload = new(v1alpha1.ApiNote)
 	rsp, err := s.client.Do(req)
 	if err != nil {
 		return successPayload, err
@@ -185,7 +185,7 @@ func (s *Storage) getNote(projectsID string, notesID string) (*grafeas.Note, err
 	return successPayload, err
 }
 
-func (s *Storage) listNotes(projectsID string, filter string, pageSize int32, pageToken string) (*grafeas.ListNotesResponse, error) {
+func (s *Storage) listNotes(projectsID string, filter string, pageSize int32, pageToken string) (*v1alpha1.ApiListNotesResponse, error) {
 	path := s.url + "/v1alpha1/projects/" + projectsID + "/notes"
 
 	queryParams := url.Values{}
@@ -209,7 +209,7 @@ func (s *Storage) listNotes(projectsID string, filter string, pageSize int32, pa
 		return nil, err
 	}
 
-	var successPayload = new(grafeas.ListNotesResponse)
+	var successPayload = new(v1alpha1.ApiListNotesResponse)
 	rsp, err := s.client.Do(req)
 	if err != nil {
 		return successPayload, err
