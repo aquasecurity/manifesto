@@ -126,34 +126,38 @@ Where <filename> contains all the metadata references for this repository. An ex
 
 ```
 {
-	"images": [{
-		"image_digest": "70d2f067eb94ec8ab0530068a414d8dbe8c203244ae5d5ad4ba6eb1babd1c1c1",
-		"manifesto": [{
-				"type": "seccomp",
-				"digest": "sha256:a2fe22a6d44aa86432adad99481c3ad526ba35af2223df126620d20e38c70fac"
-			},
-			{
-				"type": "approvals",
-				"digest": "sha256:6ced8eb4e6a61639601e7073963ec04a80f70a11442157e1dd825f042879a6da"
-			},
-			{
-				"type": "contact",
-				"digest": "sha256:e896a0012a3450d9cef7e040eea8bed3fe06188957439fea501a65b62c65b4f1"
-			}
-		]
-	}, 
-    {
-		"image_digest": "51d2f067eb94ec8ab0531987a414d8dbe8c203244ae5d5ad4ba6eb1babd1d54a",
-		"manifesto": [{
-				"type": "seccomp",
-				"digest": "sha256:b2f72296d04ea36435adae99481c3ad526ba35af2223df126620d20e38c9763c"
-			},
-			{
-				"type": "documentation",
-				"digest": "sha256:9ce18eb4e6a66639601e7073963ec04aa0f70a11442157e1d9825f042879abb1"
-			}
-		]
-    }]
+	"images": [
+		{
+			"image_digest": "70d2f067eb94ec8ab0530068a414d8dbe8c203244ae5d5ad4ba6eb1babd1c1c1",
+			"manifesto": [
+				{
+					"type": "seccomp",
+					"digest": "sha256:a2fe22a6d44aa86432adad99481c3ad526ba35af2223df126620d20e38c70fac"
+				},
+				{
+					"type": "approvals",
+					"digest": "sha256:6ced8eb4e6a61639601e7073963ec04a80f70a11442157e1dd825f042879a6da"
+				},
+				{
+					"type": "contact",
+					"digest": "sha256:e896a0012a3450d9cef7e040eea8bed3fe06188957439fea501a65b62c65b4f1"
+				}
+			]
+		},
+		{
+			"image_digest": "51d2f067eb94ec8ab0531987a414d8dbe8c203244ae5d5ad4ba6eb1babd1d54a",
+			"manifesto": [
+				{
+					"type": "seccomp",
+					"digest": "sha256:b2f72296d04ea36435adae99481c3ad526ba35af2223df126620d20e38c9763c"
+				},
+				{
+					"type": "documentation",
+					"digest": "sha256:9ce18eb4e6a66639601e7073963ec04aa0f70a11442157e1d9825f042879abb1"
+				}
+			]
+		}
+	]
 }
 ```
 
